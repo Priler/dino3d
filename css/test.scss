@@ -1,0 +1,43 @@
+body {
+  font-family: 'Noto Serif', serif;
+}
+
+.main {
+  background: lighten(#B5DFFF, 10%);
+  display: block;
+  width: 500px;
+  height: 200px;
+  border-radius: 20px;
+  padding: 20px 40px;
+  text-align: center;
+  font-size: 24px;
+  line-height: 225px;
+
+  & > p {
+    line-height: 2em;
+  }
+
+  position: fixed;
+  left:0;top:0;right:0;bottom:0;
+  margin: auto;
+
+  a {
+    color: #FF4083;
+    font-weight: bold;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  small {
+    display: block;
+    font-size: 16px;
+    color: darken(#cccccc, 25%);
+    margin-top: 20px;
+
+    a {
+      color: darken(#cccccc, 50%);
+    }
+  }
+}
