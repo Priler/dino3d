@@ -8,11 +8,18 @@
 	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 	<!-- Custom CSS -->
-	<link rel="stylesheet" href="css/style.min.css">
+	<link rel="stylesheet" href="css/style.min.css?patch=1">
 
 	<script src="libs/dat.gui/dat.gui.min.js"></script>
 </head>
 <body>
+
+	<div class="actions">
+		<button id="start" class="hidden">НАЧАТЬ ИГРУ</button>
+		<button id="restart" class="hidden">ЗАНОВО</button>
+
+		<span class="progress">Загрузка ...<small id="progress">0%</small></span>
+	</div>
 
 	<script src="libs/three/three.min.js"></script>
 	<script src="libs/three/controls/OrbitControls.js"></script>
@@ -34,8 +41,9 @@
 	<script src="libs/nebula/three-nebula.js"></script>
 	<script src="libs/buzz/buzz.min.js"></script>
 
+	<script src="libs/visibly/visibly.js"></script>
 	<script src="js/config-high.js"></script>
-	<script src="js/build.min.js"></script>
+	<script src="js/build.min.js?patch=1"></script>
 
 </body>
 </html>
