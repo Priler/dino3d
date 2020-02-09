@@ -17,7 +17,7 @@ const config = {
 		// half size for performance
 		"width": window.innerWidth,
 		"height": window.innerHeight,
-		"render_at": .9, // render resolution (lower - more fps at cost of quality)
+		"render_at": 1, // render resolution (lower - more fps at cost of quality)
 		"interval": false, // fps cap (false for no fps limit)
 		"fps_counter": false, // only works for fps cap
 
