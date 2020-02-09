@@ -1,0 +1,202 @@
+$LIGHTING_FLOOR: 1;
+$LIGHTING_CEIL: 2;
+$LIGHTING_FLAT: 3;
+
+@mixin text3d($primary, $depth: 5, $shadowsteps: 5, $shadowincrementer: 3px, $shadowopacity: .5, $primaryshadowcolour: #000, $lighting: $LIGHTING_CEIL) {
+  $predefinedShadows: (
+    0 0 5px rgba($primaryshadowcolour, .05), 
+    0 -1px 3px rgba($primaryshadowcolour, .2), 
+    0 3px 5px rgba($primaryshadowcolour, .2));
+  $value: ();
+  @for $i from 1 through $depth {
+    $num: $i + px;
+    $hueadjust: $i;
+    @if($lighting == $LIGHTING_FLOOR) {
+      $hueadjust: ($i * 2 - $depth - 5) * 1%;
+    } @elseif($lighting == $LIGHTING_CEIL) {
+      $hueadjust: -($i*2 + $depth - 10) * 1%;
+    } @elseif($lighting == $LIGHTING_FLAT) {
+      $hueadjust: -$depth * 1%;
+    }
+    $colour: adjust-color($primary, $lightness: $hueadjust);
+    $theShadow: 0 $num 0 $colour;
+    $value: append($value, $theShadow, comma);
+  }
+  
+  @for $i from 1 through $shadowsteps {
+    @if($i >= length($predefinedShadows)) {
+      $dist: $i * $shadowincrementer;
+      $value: append($value, 0 $dist $dist rgba($primaryshadowcolour, $shadowopacity));
+    } @else {
+      $value: append($value, nth($predefinedShadows, $i));
+    }
+  }
+  
+  text-shadow: $value;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background-color: #E7B251;
+  background-color: #FFFFFF;
+  // font-family: 'Press Start 2P', cursive;
+  height: 100%;
+}
+
+#three-canvas { display: none; width: 100%!important; height: 100%!important; }
+
+.game-started {
+  #chrome-no-internet {
+    display: none;
+  }
+
+  #three-canvas {
+    display: block;
+  }
+}
+
+/**
+ * Chrome no internet starting joke.
+ */
+#chrome-no-internet {
+  width: 600px;
+  height: 275px;
+  position: fixed;
+  left:0;right:0;
+  margin:auto;
+  margin-top: 175px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+
+  & > .poster {
+    display: block;
+    width: 100%;
+    height: 75px;
+
+    background-image: url(../media/no-internet.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    position: absolute;
+  }
+
+  @keyframes jump {
+    from {top: 0px;}
+    to {top: -50px;}
+  }
+
+  &.before-start > .poster {
+    animation: jump .3s;
+    animation-iteration-count: 2;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+  }
+
+  & > h1 {
+    font-size: 24px;
+    font-weight: 500;
+    color: rgb(32, 33, 36);
+    line-height: 30px;
+    margin-bottom: 20px;
+    margin-top: 75px;
+  }
+
+  & > .info {
+    & > p {
+      color: rgb(95, 99, 104);
+      font-size: 15px;
+      line-height: 23.25px;
+      margin-bottom: 0;
+    }
+
+    & > ul {
+      color: rgb(95, 99, 104);
+      font-size: 15px;
+      list-style-type: disc;
+      margin-top: 0;
+      line-height: 23.25px;
+
+      li > {
+        color: rgb(95, 99, 104);
+        display: list-item;
+      }
+
+      #game-start {
+        color: #7FD133;
+        font-weight: 500;
+        cursor: pointer;
+
+        &.hidden {
+          display: none;
+        }
+      }
+    }
+
+    & > small {
+      color: rgb(95, 99, 104);
+      font-size: 12px;
+      line-height: 18.6px;
+    }
+  }
+}
+
+/**
+ * Interface stuff.
+ */
+#game-restart {
+  width: 600px;
+  height: 275px;
+  position: fixed;
+  left:0;top:0;right:0;bottom:0;
+  margin:auto;
+  font-family: 'Press Start 2P', cursive;
+  text-align: center;
+  cursor: pointer;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Opera and Firefox */
+
+  & > h1 {
+    font-size: 40px;
+    margin-bottom: 75px;
+  }
+
+  & > img {
+    width: 128px;
+  }
+
+  &.hidden {
+    display: none;
+  }
+}
+
+
+/**
+ * Scores.
+ */
+
+$scorecountercolor: darken(#85A0AC, 5%);
+
+#score-counter {
+  position: fixed;
+  top: 100px;
+  right: 50px;
+
+  @include text3d(
+    adjust-color($scorecountercolor, $lightness: -8%), 
+    $depth: 8, 
+    $primaryshadowcolour: adjust-color($scorecountercolor, $lightness: -10%, $saturation: +20%));
+
+  & > .score-counter-score {
+    margin-left: 30px;
+
+    &.score-flash {
+      animation: blinker .5s step-start infinite;
+    }
+  }
+}
