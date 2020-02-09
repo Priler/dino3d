@@ -3,8 +3,9 @@
  * @type {Object}
  */
 const config = {
-	"base_path": "/",
+	"base_path": "/dino3d/",
 	"logs": true,
+	"debug": false,
 	"camera": {
 		"fov": 45,
 		"aspect": window.innerWidth/window.innerHeight,
