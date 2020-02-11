@@ -795,7 +795,7 @@ class ScoreManager {
       {
         this.canvas = document.createElement('canvas');
         this.canvas.id = 'score-counter';
-        this.canvas.width = 400;
+        this.canvas.width = window.innerWidth - 100; // 100 - margin from left and right
         this.canvas.height = 60;
         document.body.appendChild(this.canvas);
 
@@ -894,7 +894,7 @@ class ScoreManager {
 
       this.ctx.font = '28px "Press Start 2P"';
       this.ctx.fillStyle = 'rgba(106,133,145,1)';
-      this.ctx.fillText(text, 0, 60);
+      this.ctx.fillText(text, this.canvas.width - text.length * 28, 60);
     }
   }
 /**
