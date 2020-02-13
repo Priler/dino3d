@@ -11,12 +11,7 @@ All the graphics was hand crafted with Magica Voxel software, so that the overal
 ![T-Rex Run 3D](https://i.imgur.com/8yTGRmC.png)
 
 # ToDo
-- [ ] Ingame menu (for settings, etc)
-- [ ] Day/Night modes
-- [ ] Firefox/Opera/etc browsers compatibility
-- [ ] Mobile phones support (swipes, resizing, optimization)
-- [ ] CSM shadows
-- [ ] Better & more stable FPS
+https://trello.com/b/Pt4FSqOi/t-rex-run-3d
 
 ## Change history
 - Update 1
@@ -45,3 +40,7 @@ https://github.com/addyosmani/visibly.js/ - Page Visibility API shim
 
 (C) 2020 Abraham Tugalov.
 http://howdyho.net
+
+## Contributors
+- Aidar Ayupov <https://github.com/preposition17> for inspiration about 3D models
+- Rifat Fazlutdinov <https://github.com/Rifat-Fazlutdinov> for telegram bugreport bot
