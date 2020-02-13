@@ -1,5 +1,5 @@
 # 🦖 T-Rex Run 3D
-Play the game here: http://priler.github.io/dino3d/low.html
+Play the game here: http://priler.github.io/dino3d/low.html  
 Alt. version with SAO and shadows: http://priler.github.io/dino3d/
 
 # Description
