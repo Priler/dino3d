@@ -42,5 +42,5 @@ https://github.com/addyosmani/visibly.js/ - Page Visibility API shim
 http://howdyho.net
 
 ## Contributors
-- Aidar Ayupov <https://github.com/preposition17> for inspiration about 3D models
+- Aidar Ayupov <https://github.com/preposition17> & Vildan Safin <https://github.com/Enigma228322> for inspiration about 3D models
 - Rifat Fazlutdinov <https://github.com/Rifat-Fazlutdinov> for telegram bugreport bot
