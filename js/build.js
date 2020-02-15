@@ -469,6 +469,7 @@ class EnemyManager {
 		// hide mesh
 		let enemiesGroup = this.pool.getItem(key);
 		for(let e = 0; e < enemiesGroup.length; e++ ) {
+			enemiesGroup[e].position.z = this.config.remove_z * 2;
 			enemiesGroup[e].visible = false;
 		}
 
@@ -505,7 +506,7 @@ class EnemyManager {
 				 * @TODO
 				 * Optimization can be done.
 				 */
-				if(this.config.enable_collisions) {
+				if(this.config.enable_collisions && e[j].visible) {
 					// check collision with player
 					let eBox = this.box3 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 					eBox.setFromObject(e[j]);
