@@ -9,8 +9,5 @@ load_manager.set_loader('ground', [], function() {
 
     load_manager.set_vox('ground', builder);
     load_manager.set_status('ground', true);
-
-    nature.initEarth();
-    nature.initGround();
   });
 });

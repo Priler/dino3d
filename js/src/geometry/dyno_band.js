@@ -15,22 +15,14 @@ load_manager.set_loader('dyno_band', ['dyno'], function() {
 
       dyno.castShadow = true;
 
-      dyno.position.y = nature.cache.ground.box.max.y + 0.001;
-      dyno.position.z = 15;
-      dyno.rotation.y = Math.PI / 2;
-
       frames[i] = dyno;
-    });
-  }
 
-  var bTimeout = setInterval(function() {
-    if(frames.length - 1 == framesCount) {
-        clearInterval(bTimeout); 
-
-        load_manager.set_vox('dyno_band', frames);
+      if(frames.length - 1 == framesCount) {
+        load_manager.set_mesh('dyno_band', frames);
         load_manager.set_status('dyno_band', true);
 
         player.setPlayerFrames(frames, true);
-    }
-  }, 10);
+      }
+    });
+  }
 });

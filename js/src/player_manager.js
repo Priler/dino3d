@@ -6,6 +6,8 @@
   class PlayerManager {
     constructor() {
       this.frames = null;
+      this.frames_band = null;
+      this.frames_death = null;
       this.frame = null;
       this.collisionBox = null;
       this.currentFrame = 0;
@@ -21,6 +23,31 @@
             "gravity": -30 // new g
           }
       }
+    }
+
+    init() {
+        // init position
+        for(let i in this.frames) {
+            this.frames[i].position.y = nature.cache.ground.box.max.y + 0.05;
+            this.frames[i].position.z = 15;
+            this.frames[i].rotation.y = Math.PI / 2;
+
+            this.frames[i].init_y = this.frames[i].position.y;
+        }
+
+        for(let i in this.frames_band) {
+            this.frames_band[i].position.y = nature.cache.ground.box.max.y + 0.05;
+            this.frames_band[i].position.z = 15;
+            this.frames_band[i].rotation.y = Math.PI / 2;
+
+            this.frames_band[i].init_y = this.frames_band[i].position.y;
+        }
+
+        for(let i in this.frames_death) {
+            this.frames_death[i].position.y = nature.cache.ground.box.max.y + 0.05;
+            this.frames_death[i].position.z = 15;
+            this.frames_death[i].rotation.y = Math.PI / 2;
+        }
     }
 
     getVelocity(boost = false) {
@@ -41,6 +68,10 @@
     setGravity(g = 37, boost = false) {
         if(boost) {this.jump.boost.gravity = -g;}
         else {this.jump.gravity = -g;}
+    }
+
+    setPlayerDeathFrames(frames) {
+        this.frames_death = frames;
     }
 
     setPlayerFrames(frames, band_down = false) {
@@ -95,6 +126,16 @@
             this.collisionBox.scale.z = 2.5;
             this.collisionBox.position.z = this.frame.position.z - .5;
             this.collisionBox.position.y = this.frame.position.y + 0.7;
+        }
+    }
+
+    deathFrame() {
+        if(!input.keys.down.down) {
+            // stance
+            this.frame.geometry = this.frames_death['wow'].geometry;
+        } else {
+            // band down
+            this.frame.geometry = this.frames_death['wow-down'].geometry;
         }
     }
 
@@ -193,6 +234,11 @@
                 input.keys.space.clock.elapsedTime = 0;
             }
         }
+    }
+
+    reset() {
+        this.currentFrame = 0;
+        this.nextFrame();
     }
 
     update(timeDelta) {

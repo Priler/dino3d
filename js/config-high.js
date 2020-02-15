@@ -10,7 +10,7 @@ const config = {
 		"fov": 45,
 		"aspect": window.innerWidth/window.innerHeight,
 		"near": 0.1,
-		"far": 75,
+		"far": 150,
 		"controls": false,
 		"helper": false
 	},
@@ -25,11 +25,12 @@ const config = {
 		// graphics settings
 		"antialias": true, // AA
 		"shadows": true, // cast shadows (2K only)?
+		"shadows_type": THREE.PCFSoftShadowMap,
 		"fog": true, // show fog?
 		"toneMapping": true, // enable tone mapping (Uncharted2)?
 		"postprocessing": {
-			"enable": true, // enable postprocessing?
-			"sao": true, // Scaling Ambient Occlusion
+			"enable": false, // enable postprocessing?
+			"sao": false, // Scaling Ambient Occlusion
 		}
 	},
 	"IS_HIDPI": window.devicePixelRatio > 1,

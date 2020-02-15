@@ -47,39 +47,116 @@ class LoadManager {
       return this.assets[what].mesh;
     }
 
+    set_texture(what, texture) {
+      this.assets[what].is_texture = true;
+      this.assets[what].texture = texture;
+    }
+
+    get_texture(what) {
+      return this.assets[what].texture;
+    }
+
     get_random_mesh(what) {
       return this.assets[what].mesh[Math.floor(Math.random() * this.assets[what].mesh.length)];
     }
 
-    get_mesh_material(what) {
+    async wait_for_mesh_material(what, i) {
+      let ready = false;
+
+      while(!ready) {
+        try {
+          this.assets[what].mesh[i].material;
+          ready = true;
+        } catch(e) {
+          await new Promise((resolve, reject) => setTimeout(resolve, 10));
+          ready = false;
+        }
+      }
+
+      return this.assets[what].mesh[i].material;
+    }
+
+    async get_mesh_material(what) {
       if(Array.isArray(this.assets[what].mesh)) {
         // return list of material
-        let gs = [];
+        let ms = [];
 
         for(let i = 0; i < this.assets[what].mesh.length; i++) {
-          gs.push(this.assets[what].mesh[i].material);
+          ms.push(await this.wait_for_mesh_material(what, i));
         }
 
-        return gs;
+        return ms;
       } else {
         // return material
         return this.assets[what].mesh.material;
       }
     }
 
-    get_mesh_geometry(what) {
+    async wait_for_mesh_geometry(what, i) {
+      let ready = false;
+
+      while(!ready) {
+        try {
+          this.assets[what].mesh[i].geometry;
+          ready = true;
+        } catch(e) {
+          await new Promise((resolve, reject) => setTimeout(resolve, 10));
+          ready = false;
+        }
+      }
+
+      return new Promise((resolve, reject) => {
+        resolve(this.assets[what].mesh[i].geometry)
+      });
+    }
+
+    async get_mesh_geometry(what) {
       if(Array.isArray(this.assets[what].mesh)) {
         // return list of geometry
         let gs = [];
 
         for(let i = 0; i < this.assets[what].mesh.length; i++) {
-          gs.push(this.assets[what].mesh[i].geometry);
+          gs.push(await this.wait_for_mesh_geometry(what, i));
         }
 
-        return gs;
+        return new Promise((resolve, reject) => {
+          resolve(gs)
+        });
       } else {
         // return geometry
-        return this.assets[what].mesh.geometry;
+        return new Promise((resolve, reject) => {
+          resolve(this.assets[what].mesh.geometry)
+        });
+      }
+    }
+
+    get_certain_mesh(what, type, type_field, return_index = false) {
+      if(Array.isArray(type)) {
+        // list
+        let ms = [];
+
+        for(let i = 0; i < this.assets[what].mesh.length; i++) {
+          if(type.includes(this.assets[what].mesh[i][type_field]) || type.includes(this.assets[what].mesh[i][type_field].split('/')[0])) {
+            if(return_index) {
+              ms.push(i);
+            } else {
+              ms.push(this.assets[what].mesh[i]);
+            }
+          }
+        }
+
+        return ms;
+      } else {
+        // single
+        for(let i = 0; i < this.assets[what].mesh.length; i++) {
+          if(this.assets[what].mesh[i][type_field] == type) {
+            if(return_index) {
+              return i;
+            } else {
+              return this.assets[what].mesh[i];
+            }
+          }
+        }
       }
     }
 

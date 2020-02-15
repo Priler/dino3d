@@ -8,56 +8,142 @@ class NatureManager {
 
   constructor() {
     this.config = {
-      "max_amount": {
-        "rocks": 10,
-        "flowers": 10,
-        "misc": 10
-      },
-      "rescale_rand": {
-        "rocks": [0.4, 1.8],
-        "flowers": [0.5, 1.4]
-      },
-      "z_distance": {
-        "rocks": 4,
-        "flowers": 5,
-        "misc": 10
-      },
-      "z_distance_rand": {
-        "rocks": [.5, 4],
-        "flowers": [2, 10],
-        "misc": [1, 4]
-      },
-      "x_random_range": {
-        "rocks": [-1.5, 1.5],
-        "flowers": [-1.5, 1.5]
-      },
       "remove_z": {
-        "rocks": 25,
-        "flowers": 20,
-        "misc": 20,
-        "ground": 40
+        "ground": 50
+      },
+      "levels": {
+        "playground": {
+          "max_amount": 20,
+          "z_distance": 5,
+          "z_distance_rand": [1, 3],
+          "x_random_range": [-2.5, 2.5],
+          "remove_z": 20,
+          "spawn": null
+        },
+        "first": {
+          "max_amount": 20, // 25 for z_distance = 4 is optimal
+          "z_distance": 5,
+          "z_distance_rand": [1, 4],
+          "remove_z": 20,
+          "spawn": null
+        },
+        "second": {
+          "max_amount": 20,
+          "z_distance": 10,
+          "z_distance_rand": [1, 4],
+          "remove_z": 20,
+          "spawn": null
+        },
+        "third": {
+          "max_amount": 10,
+          "z_distance": 30,
+          "z_distance_rand": [1, 7],
+          "remove_z": 20,
+          "spawn": null
+        },
+        "water": {
+          "max_amount": 10,
+          "z_distance": 20,
+          "z_distance_rand": [1, 4],
+          "remove_z": 20,
+          "spawn": null // will be set at game start
+        },
+        "water2": {
+          "max_amount": 20,
+          "z_distance": 10,
+          "z_distance_rand": [1, 2],
+          "remove_z": 20,
+          "spawn": null // will be set at game start
+        },
+        "empty": {
+          "max_amount": 20,
+          "z_distance": 10,
+          "z_distance_rand": [1, 4],
+          "remove_z": 20,
+          "spawn": null // will be set at game start
+        },
       },
       "misc_items": {
         "PalmTree": {
           "rescale_rand": [2, 3],
-          "x_random_range": [-25, -5]
+          "x_random_range": [-3, 3]
         },
-        "Tumbleweed": {
+        "tumbleweed": {
           "rescale_rand": [.6, .8],
-          "x_random_range": [-25, -5],
-          "random_rotate_vel": [0.01, 0.1]
+          "x_random_range": [-3, 3],
+          "random_rotate_vel": [0.01, 0.1],
+          "y_rotate": -(Math.PI / 2),
+          "rotate_direction": 'z',
+          "behavior": 'roll'
+        },
+        "cactus": {
+          "rescale_rand": [.6, 1.2],
+          "x_random_range": [-3, 3],
+          "y_random_rotate": [-80, 80]
+        },
+        "desert_skull": {
+          "rescale_rand": [.15, .3],
+          "x_random_range": [-3, 3],
+          "z_random_rotate": [-60, 60],
+          "y_random_rotate": [-30, 30]
+        },
+        "scorpion": {
+          "rescale_rand": [.3, .7], // [.3, .7]
+          "x_random_range": [-3, 3],
+          "y_random_rotate": [-40, 40]
+        },
+        "rocks": {
+          "rescale_rand": [.5, 3],
+          "x_random_range": [-3, 3],
+        },
+        "flowers": {
+          "rescale_rand": [1, 2],
+          "x_random_range": [-3, 3],
+        },
+        "trees": {
+          "rescale_rand": [.8, 3],
+          "x_random_range": [-3, 3],
+          "y_random_rotate": [-80, 80]
+        },
+        "fish": {
+          "rescale_rand": [.1, .4],
+          "x_random_range": [-2.5, 2.5],
+          "y_random_rotate": [-60, 60]
+        },
+        "seaweed": {
+          "rescale_rand": [.3, 1],
+          "x_random_range": [-2.5, 2.5],
+          "y_random_rotate": [-60, 60]
         }
       }
     }
 
+    this.earth_chunks = [];
     this.ground_chunks = [];
+    this.ground_chunks_decoration = [];
+    this.ground_chunks_decoration_levels = [];
+    this.water = null;
     this.rocks = [];
     this.flowers = [];
-    this.misc = [];
+    this.misc = {};
 
     this.cache = {
+      "earth": {
+        "box": null,
+        "geometry": null,
+        "material": null
+      },
       "ground": {
         "box": null,
+        "geometry": null,
+        "material": null
+      },
+      "ground_decoration": {
+        "box": null,
+        "geometry": null,
+        "material": null
+      },
+      "water": {
         "geometry": null,
         "material": null
       },
@@ -78,21 +164,40 @@ class NatureManager {
 
   initEarth() {
     // earth
-    let cGeometry = new THREE.BoxGeometry( 120, .1, 200 );
-    let cMaterial = new THREE.MeshLambertMaterial( {color: 0xDABF8C} );
-    window.cube = new THREE.Mesh( cGeometry, cMaterial );
+    if(!this.cache.earth.geometry) {
+      this.cache.earth.geometry = new THREE.BoxGeometry( 100, 0, 250 );
+      this.cache.earth.material = new THREE.MeshLambertMaterial( {color: 0xEFBC5C} ); // 0xD6B161
+    }
 
-    window.cube.receiveShadow = true;
+    // zero level
+    this.earth = new THREE.Mesh(this.cache.earth.geometry, this.cache.earth.material);
+    this.earth.receiveShadow = true;
 
-    cube.position.x = -15;
-    cube.position.y = -.1;
-    cube.position.z = -20;
-    cube.rotation.z = -.15
+    this.earth.position.x = 0;
+    this.earth.position.y = nature.cache.ground.box.min.y - .5;
+    this.earth.position.z = -20;
 
-    scene.add( cube );
+    this.cache.earth.box = new THREE.Box3().setFromObject(this.earth);
+
+    scene.add( this.earth );
   }
 
-  initGround(chunks = 11) {
+  initWater() {
+    if(this.cache.water.geometry === null) {
+      // set cache
+      this.cache.water.geometry = new THREE.BoxGeometry( 8, 1, 250 );
+      this.cache.water.material = new THREE.MeshLambertMaterial( {color: 0x6EDFFF, transparent: true, opacity: .85} );
+    }
+
+    this.water = new THREE.Mesh( this.cache.water.geometry, this.cache.water.material );
+    scene.add( this.water );
+
+    this.water.position.z = -75;
+    this.water.position.x = -7;
+    this.water.position.y = nature.cache.earth.box.max.y + .5;
+  }
+
+  initGround(chunks = 13) {
     // get vox
     let vox = load_manager.get_vox('ground');
 
@@ -102,16 +207,19 @@ class NatureManager {
       "material": vox.material
     };
 
-    // spawn ground chunks
+    // spawn runner ground chunks
     for(let i = 0; i < chunks; i++) {
       let chunk = new THREE.Mesh( this.cache.ground.geometry, this.cache.ground.material );
-      chunk.position.y = -2.5;
       chunk.receiveShadow = true;
       // chunk.castShadow = true;
 
+      chunk.position.y = -2.5;
+      chunk.scale.set(1.5, 1.5, 1.5);
+
       if(i > 0) {
         // reposition
-        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - 10;
+        let lChunk = this.ground_chunks[this.ground_chunks.length-1];
+        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - (10 * lChunk.scale.z);
       } else {
         // first
         chunk.position.z = 15;
@@ -131,7 +239,8 @@ class NatureManager {
       if(this.ground_chunks[i].position.z > this.config.remove_z.ground) {
         // re move
         let chunk = this.ground_chunks.splice(i, 1)[0];
-        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - 10;
+        let lChunk = this.ground_chunks[this.ground_chunks.length-1];
+        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - (10 * lChunk.scale.z);
         this.ground_chunks.push(chunk);
       }
 
@@ -140,235 +249,323 @@ class NatureManager {
     }
   }
 
-  initRocks() {
+  initGroundDecoration(level_name, x, y, receiveShadow = true, spawn = 'all', chunks = 11) {
     // get vox
-    let vox = load_manager.get_vox('rocks');
+    let vox = load_manager.get_vox('ground_bg');
 
     // set cache
-    this.cache.rocks = {
-      "geometry": load_manager.get_mesh_geometry('rocks'),
-      "material": load_manager.get_mesh_material('rocks')
+    this.cache.ground_decoration = {
+      "geometry": vox.geometry,
+      "material": vox.material
     };
 
-    // spawn some rocks
-    for(let i = 0; i < this.config.max_amount.rocks; i++) {
-      let rand = Math.floor(Math.random() * load_manager.assets['rocks'].mesh.length);
-      let rock = new THREE.Mesh(
-        this.cache.rocks.geometry[rand],
-        this.cache.rocks.material[rand]
-      );
+    // create pool
+    let pool = [];
 
-      // rock.castShadow = true;
-      rock.receiveShadow = true;
-      rock.position.x = this.random(this.config.x_random_range['rocks'][0], this.config.x_random_range['rocks'][1]);
-      rock.position.y = nature.cache.ground.box.max.y + 0.025;
+    // spawn runner ground chunks
+    for(let i = 0; i < chunks; i++) {
+      let chunk = new THREE.Mesh( this.cache.ground_decoration.geometry, this.cache.ground_decoration.material );
+      
+      chunk.scale.set(3, 2, 3);
+      chunk.position.x = x;
+      chunk.position.y = y;
+      chunk.receiveShadow = receiveShadow;
+      // chunk.castShadow = true;
 
-      // rescale
-      let rescaleRand = this.random(this.config.rescale_rand.rocks[0], this.config.rescale_rand.rocks[1]);
-      rock.scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-      // reposition
-      let zRand = this.get_z('rocks');
-      if(this.rocks.length) {
-        // tail z
-        rock.position.z = -(-this.rocks[this.rocks.length-1].position.z + zRand);
-      } else {
-        // first z
-        rock.position.z = zRand;
-      }
-
-      // add to pool
-      this.rocks.push(rock);
-
-      // add to scene
-      scene.add(rock);
-    }
-  }
-
-  moveRocks(timeDelta) {
-    for(let i = 0; i < this.rocks.length; i++) {
-      if(this.rocks[i].position.z > this.config.remove_z.rocks) {
-        // re move
-        let rock = this.rocks.splice(i, 1)[0];
-
-        // rescale
-        let rescaleRand = this.random(this.config.rescale_rand.rocks[0], this.config.rescale_rand.rocks[1]);
-        rock.scale.set(rescaleRand, rescaleRand, rescaleRand);
-
+      if(i > 0) {
         // reposition
-        let zRand = this.get_z('rocks');
-        rock.position.z = -(-this.rocks[this.rocks.length-1].position.z + zRand);
-        rock.position.x = this.random(this.config.x_random_range['rocks'][0], this.config.x_random_range['rocks'][1]);
-
-        this.rocks.push(rock);
-      }
-
-      // move
-      this.rocks[i].translateZ(enemy.config.vel * timeDelta);
-    }
-  }
-
-  initFlowers() {
-    // get vox
-    let vox = load_manager.get_vox('flowers');
-
-    // set cache
-    this.cache.flowers = {
-      "geometry": load_manager.get_mesh_geometry('flowers'),
-      "material": load_manager.get_mesh_material('flowers')
-    };
-
-    // spawn some flowers
-    for(let i = 0; i < this.config.max_amount.flowers; i++) {
-      let rand = Math.floor(Math.random() * load_manager.assets['flowers'].mesh.length);
-      let flower = new THREE.Mesh(
-        this.cache.flowers.geometry[rand],
-        this.cache.flowers.material[rand]
-      );
-
-      flower.castShadow = true;
-      flower.receiveShadow = true;
-      flower.position.x = this.random(this.config.x_random_range['flowers'][0], this.config.x_random_range['flowers'][1]);
-      flower.position.y = nature.cache.ground.box.max.y + 0.025;
-
-      // rescale
-      let rescaleRand = this.random(this.config.rescale_rand.flowers[0], this.config.rescale_rand.flowers[1]);
-      flower.scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-      // reposition
-      let zRand = this.get_z('flowers');
-      if(this.flowers.length) {
-        // tail z
-        flower.position.z = -(-this.flowers[this.flowers.length-1].position.z + zRand);
+        let lChunk = pool[pool.length-1];
+        chunk.position.z = lChunk.position.z - (10 * lChunk.scale.z);
       } else {
-        // first z
-        flower.position.z = zRand;
+        // first
+        chunk.position.z = 15;
+        this.cache.ground_decoration.box = new THREE.Box3().setFromObject(chunk);
       }
 
-      // add to pool
-      this.flowers.push(flower);
+      // save level position
+      this.ground_chunks_decoration_levels[level_name] = {
+        "x": x,
+        "y": y,
+        "spawn": spawn,
+        "box": new THREE.Box3().setFromObject(chunk)
+      };
 
-      // add to scene
-      scene.add(flower);
+      // push chunk to pool
+      pool.push(chunk);
+
+      // spawn chunk
+      scene.add(chunk);
+    }
+
+    // pull pool to chunks pool
+    this.ground_chunks_decoration.push(pool);
+
+    // add custom locations
+    // this.ground_chunks_decoration_levels.push({
+    //   "x": -9,
+    //   "y": nature.cache.earth.box.max.y,
+    //   "box": new THREE.Box3().setFromObject(this.earth)
+    // });
+
+    // this.ground_chunks_decoration_levels.push({
+    //   "x": 8,
+    //   "y": nature.cache.earth.box.max.y,
+    //   "box": new THREE.Box3().setFromObject(this.earth)
+    // });
+  }
+
+  moveGroundDecoration(timeDelta) {
+    for(let i = 0; i < this.ground_chunks_decoration.length; i++) {
+      // pools
+      for(let j = 0; j < this.ground_chunks_decoration[i].length; j++) {
+        // chunks
+        if(this.ground_chunks_decoration[i][j].position.z > this.config.remove_z.ground) {
+          // re move
+          let chunk = this.ground_chunks_decoration[i].splice(j, 1)[0];
+          let lChunk = this.ground_chunks_decoration[i][this.ground_chunks_decoration[i].length-1];
+          chunk.position.z = lChunk.position.z - (10 * lChunk.scale.z);
+          this.ground_chunks_decoration[i].push(chunk);
+        }
+
+        // move
+        this.ground_chunks_decoration[i][j].position.z += enemy.config.vel * timeDelta;
+      }
     }
   }
 
-  moveFlowers(timeDelta) {
-    for(let i = 0; i < this.flowers.length; i++) {
-      if(this.flowers[i].position.z > this.config.remove_z.flowers) {
-        // re move
-        let flower = this.flowers.splice(i, 1)[0];
-
-        // rescale
-        let rescaleRand = this.random(this.config.rescale_rand.flowers[0], this.config.rescale_rand.flowers[1]);
-        flower.scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-        // reposition
-        let zRand = this.get_z('flowers');
-        flower.position.z = -(-this.flowers[this.flowers.length-1].position.z + zRand);
-        flower.position.x = this.random(this.config.x_random_range['flowers'][0], this.config.x_random_range['flowers'][1]);
-
-        this.flowers.push(flower);
-      }
-
-      // move
-      this.flowers[i].translateZ(enemy.config.vel * timeDelta);
-    }
-  }
-
-  initMisc() {
+  async initMisc() {
     // get vox
     let vox = load_manager.get_vox('misc');
 
     // set cache
     this.cache.misc = {
-      "geometry": load_manager.get_mesh_geometry('misc'),
-      "material": load_manager.get_mesh_material('misc')
+      "geometry": await load_manager.get_mesh_geometry('misc'),
+      "material": await load_manager.get_mesh_material('misc')
     };
 
-    // spawn some misc
-    for(let i = 0; i < this.config.max_amount.misc; i++) {
-      let rand = Math.floor(Math.random() * load_manager.assets['misc'].mesh.length);
-      let misc = new THREE.Mesh(
-        this.cache.misc.geometry[rand],
-        this.cache.misc.material[rand]
-      );
+    for(let l in this.config.levels) {
+      let level = this.config.levels[l];
+      let randLevel = this.ground_chunks_decoration_levels[l];
 
-      misc.misc_type = vox[rand].misc_type;
-      misc.castShadow = true;
-      misc.receiveShadow = true;
-      misc.position.x = this.random(this.config.misc_items[misc.misc_type].x_random_range[0], this.config.misc_items[misc.misc_type].x_random_range[1]);
-      // misc.position.y = nature.cache.ground.box.max.y + 0.025;
-
-      if(misc.misc_type == 'Tumbleweed') {
-        misc.position.y = (-misc.position.x * 0.15) + nature.cache.ground.box.max.y;
-        misc.rotation.z = -(-misc.position.x * 0.02);
-        misc.rotation.y = -(Math.PI / 2);
-        misc.rotate_vel = this.random(this.config.misc_items[misc.misc_type].random_rotate_vel[0], this.config.misc_items[misc.misc_type].random_rotate_vel[1]);
-      } else {
-        misc.position.y = (-misc.position.x * 0.095) + nature.cache.ground.box.max.y;
-        misc.rotation.z = -(-misc.position.x * 0.02);
+      if(!level.spawn) {
+        delete this.config.levels[l];
+        continue;
       }
 
-      // rescale
-      let rescaleRand = this.random(this.config.misc_items[misc.misc_type].rescale_rand[0], this.config.misc_items[misc.misc_type].rescale_rand[1]);
-      misc.scale.set(rescaleRand, rescaleRand, rescaleRand);
+      // spawn misc according to level
+      for(let i = 0; i < level.max_amount; i++) {
 
-      // reposition
-      let zRand = this.get_z('misc');
-      if(this.misc.length) {
-        // tail z
-        misc.position.z = -(-this.misc[this.misc.length-1].position.z + zRand);
-      } else {
-        // first z
-        misc.position.z = zRand;
+        // get misc
+        let rand
+        let misc = null;
+        if(level.spawn == '*') {
+          // any from all
+          rand = Math.floor(Math.random() * load_manager.assets['misc'].mesh.length);
+          misc = new THREE.Mesh(
+            this.cache.misc.geometry[rand],
+            this.cache.misc.material[rand]
+          );
+        } else {
+          // any from given list
+          rand = level.spawn[Math.floor(Math.random() * level.spawn.length)];
+          misc = new THREE.Mesh(
+            this.cache.misc.geometry[rand],
+            this.cache.misc.material[rand]
+          );
+        }
+
+        // basic misc setup
+        misc.misc_type = vox[rand].misc_type;
+        let misc_type = misc.misc_type.split('/')[0]; // local
+        misc.castShadow = true;
+        misc.receiveShadow = true;
+        misc.randLevel = randLevel;
+
+        // set X position according to level
+        if( "x_random_range" in level ) {
+          // level override
+          if( Array.isArray(level.x_random_range) ) {
+            // all
+            misc.position.x = this.random(
+              randLevel.x + level.x_random_range[1],
+              randLevel.x + level.x_random_range[0]
+            );
+          } else {
+            // declared
+            misc.position.x = this.random(
+              randLevel.x + level.x_random_range[misc_type][1],
+              randLevel.x + level.x_random_range[misc_type][0]
+            );
+          }
+        } else {
+          // misc config
+          misc.position.x = this.random(
+            randLevel.x + this.config.misc_items[misc_type].x_random_range[1],
+            randLevel.x + this.config.misc_items[misc_type].x_random_range[0]
+          );
+        }
+
+        misc.init_x = misc.position.x;
+
+        // Other positioning (init)
+        if("behavior" in this.config.misc_items[misc_type]) {
+          // Special behavior
+          if(this.config.misc_items[misc_type].behavior == 'roll') {
+            // roll behavior
+            misc.geometry.center();
+            misc.position.y = randLevel.box.max.y + 0.6;
+            misc.position.z = randLevel.box.max.y;
+
+            misc.rotation.y = this.config.misc_items[misc_type].y_rotate;
+            misc.rotate_vel = this.random(this.config.misc_items[misc_type].random_rotate_vel[0], this.config.misc_items[misc_type].random_rotate_vel[1]);
+          } else if(this.config.misc_items[misc_type].behavior == 'move') {
+            // walk behavior
+            misc.position.y = randLevel.box.max.y;
+
+            // Z random rotate
+            if(typeof(this.config.misc_items[misc_type].z_random_rotate) !== 'undefined') {
+              let zRandomRotate = this.random(this.config.misc_items[misc_type].z_random_rotate[0], this.config.misc_items[misc_type].z_random_rotate[1]);
+              misc.rotateZ(THREE.Math.degToRad(zRandomRotate));
+            }
+
+            // Y random rotate
+            if(typeof(this.config.misc_items[misc_type].y_random_rotate) !== 'undefined') {
+              let yRandomRotate = this.random(this.config.misc_items[misc_type].y_random_rotate[0], this.config.misc_items[misc_type].y_random_rotate[1]);
+              misc.rotateY(THREE.Math.degToRad(yRandomRotate));
+            }
+          }
+        } else {
+          // all other mesh types
+          misc.position.y = randLevel.box.max.y;
+
+          // Z random rotate
+          if(typeof(this.config.misc_items[misc_type].z_random_rotate) !== 'undefined') {
+            let zRandomRotate = this.random(this.config.misc_items[misc_type].z_random_rotate[0], this.config.misc_items[misc_type].z_random_rotate[1]);
+            misc.rotateZ(THREE.Math.degToRad(zRandomRotate));
+          }
+
+          // Y random rotate
+          if(typeof(this.config.misc_items[misc_type].y_random_rotate) !== 'undefined') {
+            let yRandomRotate = this.random(this.config.misc_items[misc_type].y_random_rotate[0], this.config.misc_items[misc_type].y_random_rotate[1]);
+            misc.rotateY(THREE.Math.degToRad(yRandomRotate));
+          }
+
+          // Y add
+          if(typeof(this.config.misc_items[misc_type].y_add) !== 'undefined') {
+            misc.position.y += this.config.misc_items[misc_type].y_add;
+          }
+        }
+
+        // Rescale mesh
+        let rescaleRand = this.random(this.config.misc_items[misc_type].rescale_rand[0], this.config.misc_items[misc_type].rescale_rand[1]);
+        misc.scale.set(rescaleRand, rescaleRand, rescaleRand);
+
+        // Set Z initial position
+        let zRand = this.get_z('misc', l);
+        if((l in this.misc) && this.misc[l].length) {
+          // tail z
+          misc.position.z = -(-this.misc[l][this.misc[l].length-1].position.z + zRand);
+        } else {
+          // first z
+          misc.position.z = zRand;
+        }
+
+        // add to level pool
+        if(!(l in this.misc)) {
+          this.misc[l] = [];
+        }
+
+        this.misc[l].push(misc);
+
+        // add to scene
+        scene.add(misc);
       }
 
-      // add to pool
-      this.misc.push(misc);
-
-      // add to scene
-      scene.add(misc);
+      // set last mesh index
+      this.misc[l].leader = level.max_amount - 1;
     }
   }
 
   moveMisc(timeDelta) {
-    for(let i = 0; i < this.misc.length; i++) {
-      if(this.misc[i].position.z > this.config.remove_z.misc) {
-        // re move
-        let misc = this.misc.splice(i, 1)[0];
+    for(let l in this.config.levels) {
+      let level = this.config.levels[l];
+      let randLevel = this.ground_chunks_decoration_levels[l];
 
-        // rescale
-        let rescaleRand = this.random(this.config.misc_items[misc.misc_type].rescale_rand[0], this.config.misc_items[misc.misc_type].rescale_rand[1]);
-        misc.scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-        // reposition
-        let zRand = this.get_z('misc');
-        misc.position.z = -(-this.misc[this.misc.length-1].position.z + zRand);
-        misc.position.x = this.random(this.config.misc_items[misc.misc_type].x_random_range[0], this.config.misc_items[misc.misc_type].x_random_range[1]);
-
-        if(misc.misc_type == 'Tumbleweed') {
-          misc.position.y = (-misc.position.x * 0.15) + nature.cache.ground.box.max.y;
-          misc.rotation.z = -(-misc.position.x * 0.02);
-          misc.rotation.y = -(Math.PI / 2);
-
-          this.misc[i].rotate_vel = this.random(this.config.misc_items[misc.misc_type].random_rotate_vel[0], this.config.misc_items[misc.misc_type].random_rotate_vel[1]);
-        } else {
-          misc.position.y = (-misc.position.x * 0.095) + nature.cache.ground.box.max.y;
-          misc.rotation.z = -(-misc.position.x * 0.02);
-        }
-
-        this.misc.push(misc);
+      if(!(l in this.misc)) {
+        continue;
       }
 
-      // move
-      if(this.misc[i].misc_type == 'Tumbleweed') {
-        // rotate
-        this.misc[i].geometry.center();
-        this.misc[i].rotation.z -= this.misc[i].rotate_vel;
-        this.misc[i].position.z += (enemy.config.vel * 1.3) * timeDelta;
-      } else {
-        this.misc[i].translateZ(enemy.config.vel * timeDelta);
+      for(let i = 0; i < this.misc[l].length; i++) {
+        let misc_type = this.misc[l][i].misc_type.split('/')[0];
+
+        // reposition, if required
+        if(this.misc[l][i].position.z > level.remove_z) {
+          // random rescale
+          let rescaleRand = this.random(
+            this.config.misc_items[misc_type].rescale_rand[0],
+            this.config.misc_items[misc_type].rescale_rand[1]
+          );
+
+          this.misc[l][i].scale.set(rescaleRand, rescaleRand, rescaleRand);
+
+          // new Z position
+          let zRand = this.get_z('misc', l);
+          this.misc[l][i].position.z = -(-this.misc[l][ this.misc[l].leader ].position.z + zRand);
+          this.misc[l].leader = i;
+
+          // other stuff
+          if("behavior" in this.config.misc_items[misc_type]) {
+            if(this.config.misc_items[misc_type].behavior == "roll") {
+              // roll behavior
+              // misc.position.y = randLevel.box.max.y + 0.6;
+
+              this.misc[l][i].rotation.y = this.config.misc_items[misc_type].y_rotate;
+              // misc.rotate_vel = this.random(
+              //   this.config.misc_items[misc_type].random_rotate_vel[0],
+              //   this.config.misc_items[misc_type].random_rotate_vel[1]
+              // );
+            } else if(this.config.misc_items[misc_type].behavior == "move") {
+              this.misc[l][i].position.x = misc.init_x;
+            }
+          } else {
+            // any other mesh
+            // misc.position.y = randLevel.box.max.y;
+            // if(typeof(this.config.misc_items[misc_type].y_add) !== 'undefined') {
+            //   // Y add
+            //   misc.position.y += this.config.misc_items[misc_type].y_add;
+            // }
+
+            // Z random rotate
+            if(typeof(this.config.misc_items[misc_type].z_random_rotate) !== 'undefined') {
+              let zRandomRotate = this.random(this.config.misc_items[misc_type].z_random_rotate[0], this.config.misc_items[misc_type].z_random_rotate[1]);
+              this.misc[l][i].rotateZ(THREE.Math.degToRad(zRandomRotate));
+            }
+
+            // Y random rotate
+            if(typeof(this.config.misc_items[misc_type].y_random_rotate) !== 'undefined') {
+              let yRandomRotate = this.random(this.config.misc_items[misc_type].y_random_rotate[0], this.config.misc_items[misc_type].y_random_rotate[1]);
+              this.misc[l][i].rotateY(THREE.Math.degToRad(yRandomRotate));
+            }
+          }
+
+          continue;
+        }
+
+        // move
+        if("behavior" in this.config.misc_items[misc_type]) {
+          if( this.config.misc_items[misc_type].behavior == 'roll' ) {
+            // roll behavior
+            this.misc[l][i].rotation[this.config.misc_items[misc_type].rotate_direction] -= this.misc[l][i].rotate_vel;
+            this.misc[l][i].position.z += (enemy.config.vel * 1 + (this.misc[l][i].rotate_vel * 20)) * timeDelta;
+          } else if(this.config.misc_items[misc_type].behavior == "move") {
+            this.misc[l][i].position.x -= (this.config.misc_items[misc_type].move_speed / 2) * -this.misc[l][i].rotation.y;
+
+            this.misc[l][i].position.z += enemy.config.vel * timeDelta;
+          }
+        } else {
+          // any other mesh movement
+          this.misc[l][i].position.z += enemy.config.vel * timeDelta;
+        }
       }
     }
   }
@@ -381,38 +578,51 @@ class NatureManager {
     }
   }
 
-  get_z(type) {
-    let zrr = this.random(this.config.z_distance_rand[type][0], this.config.z_distance_rand[type][1]);
-    return this.config.z_distance[type] * zrr;
+  get_z(type, level) {
+    // according to level
+    let zrr = this.random(
+      this.config.levels[level].z_distance_rand[0],
+      this.config.levels[level].z_distance_rand[1],
+    );
+
+    return this.config.levels[level].z_distance * zrr;
   }
 
   reset() {
-    for(let i = 0; i < this.rocks.length; i++) {
-      scene.remove(this.rocks[i]);
+    for(let l in this.config.levels) {
+      for(let i = 0; i < this.misc[l].length; i++) {
+        scene.remove(this.misc[l][i]);
+      }
     }
 
-    for(let i = 0; i < this.flowers.length; i++) {
-      scene.remove(this.flowers[i]);
-    }
-
-    for(let i = 0; i < this.misc.length; i++) {
-      scene.remove(this.misc[i]);
+    for(let i = 0; i < this.earth_chunks.length; i++) {
+      scene.remove(this.earth_chunks[i]);
     }
 
     for(let i = 0; i < this.ground_chunks.length; i++) {
       scene.remove(this.ground_chunks[i]);
     }
 
-    this.rocks = [];
-    this.flowers = [];
+    for(let i = 0; i < this.ground_chunks_decoration.length; i++) {
+      for(let j = 0; j < this.ground_chunks_decoration[i].length; j++) {
+        scene.remove(this.ground_chunks_decoration[i][j]);
+      }
+    }
+
+    scene.remove(this.water);
+
     this.misc = [];
+    this.earth = null;
     this.ground_chunks = [];
+    this.ground_chunks_decoration = [];
+    this.ground_chunks_decoration_levels = [];
+    this.water = null;
   }
 
   update(timeDelta) {
     this.moveGround(timeDelta);
-    this.moveRocks(timeDelta);
-    this.moveFlowers(timeDelta);
+    this.moveGroundDecoration(timeDelta);
+
     this.moveMisc(timeDelta);
   }
 

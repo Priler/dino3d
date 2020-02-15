@@ -24,12 +24,18 @@ class EnemyManager {
 				"ptero": 20
 			}, // z distance between enemies
 			"z_distance_rand": {
-				"cactus": [.9, 2],
-				"ptero": [.7, 3]
+				"cactus": [.9, 2.5],
+				"ptero": [.7, 4]
 			}, // z distance random rescale range
 			"rescale_rand": {
-				"cactus": [.6, 1]
+				"cactus": [.6, 1.2]
 			}, // random rescale range
+			"y_random_rotate": {
+				"cactus": [-60, 60]
+			},
+			"x_random_range": {
+				"cactus": [-.5, .5]
+			},
 			"chance_to_spawn_tail": [100, 25], // tails spawn chances
 			"tail_rescale_rand": [[.6, .9], [.4, .7]], // tails rescale rand
 
@@ -49,16 +55,16 @@ class EnemyManager {
 		}
 	}
 
-	init() {
+	async init() {
 		// set cache
 		this.cache.cactus = {
-			"geometry": load_manager.get_mesh_geometry('cactus'),
-			"material": load_manager.get_mesh_material('cactus')
+			"geometry": await load_manager.get_mesh_geometry('cactus'),
+			"material": await load_manager.get_mesh_material('cactus')
 		};
 
 		this.cache.ptero = {
-			"geometry": load_manager.get_mesh_geometry('ptero'),
-			"material": load_manager.get_mesh_material('ptero')
+			"geometry": await load_manager.get_mesh_geometry('ptero'),
+			"material": await load_manager.get_mesh_material('ptero')
 		};
 
 		// spawn enemies
@@ -94,13 +100,13 @@ class EnemyManager {
 			let diff = (-this.enemies[i][0].position.z) - (-this.enemies[i-1][this.enemies[i-1].length-1].position.z);
 			let z = -(-this.enemies[i][0].position.z - (diff / 2));
 			if( diff > min_diff && (-last_z + diff + min_distance_btw) < -z ) {
-				console.log("Z FOUND", z, "DIFF IS", diff);
+				// console.log("Z FOUND", z, "DIFF IS", diff);
 				return z;
 			}
 		}
 
 		// if not found
-		console.log("Z FOR PTERO NOT FOUND, CHAINING TO THE END");
+		// console.log("Z FOR PTERO NOT FOUND, CHAINING TO THE END");
 		let zRand = this.get_z('ptero');
 		return -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
 	}
@@ -135,8 +141,18 @@ class EnemyManager {
 			}
 			enemiesGroup[0].scale.set(rescaleRand, rescaleRand, rescaleRand);
 
+			// random X position
+            enemiesGroup[0].position.x = this.random(
+              this.config.x_random_range.cactus[1],
+              this.config.x_random_range.cactus[0]
+            );
+
+			// random Y rotate
+             let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
+             enemiesGroup[0].rotateY(THREE.Math.degToRad(yRandomRotate));
+
 			// reposition
-			enemiesGroup[0].position.x = 0; // (nature.cache.ground.box.max.x / 2) - (enemy.userData['box3d'].max.x)
+			// enemiesGroup[0].position.x = 0; // (nature.cache.ground.box.max.x / 2) - (enemy.userData['box3d'].max.x)
 			enemiesGroup[0].position.y = nature.cache.ground.box.max.y + -nature.cache.ground.box.min.y - 2.5;
 
 			let zRand = this.get_z('cactus');
@@ -254,12 +270,11 @@ class EnemyManager {
 		for(let i = 0; i < this.enemies.length; i++) {
 			if(this.enemies[i][0].position.z > this.config.remove_z) {
 				// rechain
-				let enemiesGroup = this.enemies.splice(i, 1)[0];
 
-				if(enemiesGroup[0].enemy_type == 'cactus')
+				if(this.enemies[i][0].enemy_type == 'cactus')
 				{
 					// cactus
-					for(let x = 0; x < enemiesGroup.length; x++)
+					for(let x = 0; x < this.enemies[i].length; x++)
 					{
 						// rescale
 						let rescaleRand = 1;
@@ -270,36 +285,46 @@ class EnemyManager {
 							// head
 							rescaleRand = this.get_rr('cactus');
 						}
-						enemiesGroup[x].scale.set(rescaleRand, rescaleRand, rescaleRand);
+						this.enemies[i][x].scale.set(rescaleRand, rescaleRand, rescaleRand);
+
+						// random X position
+			            this.enemies[i][x].position.x = this.random(
+			              this.config.x_random_range.cactus[1],
+			              this.config.x_random_range.cactus[0]
+			            );
+
+						// random Y rotate
+			             let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
+			             this.enemies[i][x].rotateY(THREE.Math.degToRad(yRandomRotate));
 
 						// reposition
 						let zRand = this.get_z('cactus');
 						if(x > 0) {
 							// tail
-							enemiesGroup[x].position.z = -(-enemiesGroup[x-1].position.z + (rescaleRand * 1.7));
+							this.enemies[i][x].position.z = -(-this.enemies[i][x-1].position.z + (rescaleRand * 1.7));
 						} else {
 							// head
 							// enemiesGroup[0].position.z = -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
 							let lEnemy = this.eLast('cactus');
-							enemiesGroup[0].position.z = -(-lEnemy[0].position.z + zRand);
+							this.enemies[i][0].position.z = -(-lEnemy[0].position.z + zRand);
 						}
 					}
 				} else
 				{
 					// ptero
-					enemiesGroup[0].position.y = this.get_ptero_y('ptero');
-					enemiesGroup[0].position.z = this.findZForPtero();
+					this.enemies[i][0].position.y = this.get_ptero_y('ptero');
+					this.enemies[i][0].position.z = this.findZForPtero();
 				}
-
-				this.enemies.push(enemiesGroup);
 			}
 
 			for(let e = 0; e < this.enemies[i].length; e++) {
 				// move
 				if(this.enemies[i][e].enemy_type == 'cactus') {
-					this.enemies[i][e].translateX(this.config.vel * timeDelta);
+					// this.enemies[i][e].translateX(this.config.vel * timeDelta);
+					this.enemies[i][e].position.z += this.config.vel * timeDelta;
 				} else {
-					this.enemies[i][e].translateZ(this.config.vel * timeDelta);
+					// this.enemies[i][e].translateZ(this.config.vel * timeDelta);
+					this.enemies[i][e].position.z += this.config.vel * timeDelta;
 				}
 				// this.enemies[i][e].xbox.update();
 

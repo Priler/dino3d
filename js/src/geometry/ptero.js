@@ -11,24 +11,12 @@ load_manager.set_loader('ptero', ['ground','cactus'], function() {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
 
-      // let ptero = builder.createMesh();
-
-      // ptero.castShadow = true;
-
-      // ptero.position.y = nature.cache.ground.box.max.y + 0.001;
-      // ptero.position.z = 0;
-      // ptero.rotation.y = Math.PI / 2;
-
       frames[i] = builder;
-    });
-  }
 
-  var pTimeout = setInterval(function() {
-    if(frames.length - 1 == framesCount) {
-        clearInterval(pTimeout); 
-
+      if(frames.length - 1 == framesCount) {
         load_manager.set_vox('ptero', frames);
         load_manager.set_status('ptero', true);
-    }
-  }, 10);
+      }
+    });
+  }
 });

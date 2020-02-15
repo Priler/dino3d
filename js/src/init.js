@@ -5,8 +5,8 @@
 const scene = new THREE.Scene();
 if(config.renderer.fog) {
   const color = 0xE7B251; // sandstorm - #FFB934
-  const near = 10;
-  const far = 75;
+  const near = 1;
+  const far = 175;
   scene.fog = new THREE.Fog(color, near, far);
 }
 
@@ -36,7 +36,7 @@ renderer.setPixelRatio( window.devicePixelRatio );
 
 if(config.renderer.shadows) {
 	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	renderer.shadowMap.type = config.renderer.shadows_type;
 }
 
 if(config.renderer.toneMapping) {

@@ -15,27 +15,14 @@ load_manager.set_loader('dyno', ['ground'], function() {
 
       dyno.castShadow = true;
 
-      // let dynoBox = new THREE.Box3().setFromObject( dyno );
-      // dyno.position.y = (floor.geometry.parameters.height / 2) + (dynoBox.max.y / 2) + 0.001;
-      dyno.position.y = nature.cache.ground.box.max.y + 0.05;
-      dyno.position.z = 15;
-      dyno.rotation.y = Math.PI / 2;
-
       frames[i] = dyno;
-    });
-  }
 
-  var dTimeout = setInterval(function() {
-    if(frames.length - 1 == framesCount) {
-        clearInterval(dTimeout); 
-        
-        // spawn dyno
-        // scene.add(frames[0]);
-
-        load_manager.set_vox('dyno', frames);
+      if(frames.length - 1 == framesCount) {
+        load_manager.set_mesh('dyno', frames);
         load_manager.set_status('dyno', true);
 
         player.setPlayerFrames(load_manager.get_vox('dyno'));
-    }
-  }, 10);
+      }
+    });
+  }
 });

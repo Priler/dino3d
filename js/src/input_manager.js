@@ -78,14 +78,17 @@
       // addKey(39, 'right');
       // addKey(38, 'up');
       addKey(40, 'down'); // down
-      addKey(83, 'down'); // s
+      // addKey(83, 'down'); // s
       addKey(17, 'down'); // Ctrl
 
-      addKey(87, 'space'); // w
+      // addKey(87, 'space'); // w
       addKey(38, 'space'); // up
       addKey(32, 'space'); // space
 
+      addKey(81, 'debug_speedup'); // q
+
       window.addEventListener('keydown', (e) => {
+        // console.log(e.keyCode);
         setKeyFromKeyCode(e.keyCode, true);
       });
  

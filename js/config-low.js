@@ -10,7 +10,7 @@ const config = {
 		"fov": 45,
 		"aspect": window.innerWidth/window.innerHeight,
 		"near": 0.1,
-		"far": 75,
+		"far": 150,
 		"controls": false,
 		"helper": false
 	},
@@ -25,6 +25,7 @@ const config = {
 		// graphics settings
 		"antialias": false, // AA
 		"shadows": false, // cast shadows (2K only)?
+		"shadows_type": THREE.PCFSoftShadowMap,
 		"fog": true, // show fog?
 		"toneMapping": true, // enable tone mapping (Uncharted2)?
 		"postprocessing": {

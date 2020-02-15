@@ -2,15 +2,41 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Dyno 3D</title>
-
-	<!-- Press Start 2P font -->
-	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
+	<title>T-Rex Run 3D</title>
 
 	<!-- Custom CSS -->
-	<link rel="stylesheet" href="css/style.min.css">
+	<link rel="stylesheet" href="css/style.min.css?patch=2x0">
+
+	<!-- Preload -->
+	<link rel="preload" as="image" href="media/repeat.png" />
+	<link rel="preload" as="image" href="media/preloader-dino.png">
+	<link rel="preload" as="image" href="media/3d-title.png">
+
 </head>
 <body>
+
+	<div id="preloader">
+		<div class="progress">
+	        <div class="chart">
+	            <div id="game-load-progress" class="bar lime bar-0">
+	                <div class="face top">
+	                    <div class="growing-bar"></div>
+	                </div>
+	                <div class="face side-0">
+	                    <div class="growing-bar"></div>
+	                </div>
+	                <div class="face floor">
+	                    <div class="growing-bar"></div>
+	                </div>
+	                <div class="face side-a"></div>
+	                <div class="face side-b"></div>
+	                <div class="face side-1">
+	                    <div class="growing-bar"></div>
+	                </div>
+	            </div>
+	        </div>
+		</div>
+	</div>
 
 	<div id="chrome-no-internet">
 		<div class="poster"></div>
@@ -53,8 +79,8 @@
 	<script src="libs/howler/howler.min.js"></script>
 
 	<script src="libs/visibly/visibly.js"></script>
-	<script src="js/config-low.js?patch=01"></script>
-	<script src="js/build.min.js?patch=01"></script>
+	<script src="js/config-low.js?patch=2x0"></script>
+	<script src="js/build.js?patch=2x0"></script>
 
 </body>
 </html>

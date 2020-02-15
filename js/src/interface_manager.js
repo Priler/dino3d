@@ -15,6 +15,7 @@ class InterfaceManager {
     	};
 
         this.other = {
+            "preloader": document.getElementById('preloader'),
             "overlay": document.getElementById('chrome-no-internet')
         }
     }

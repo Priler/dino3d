@@ -38,10 +38,23 @@ class AudioManager {
         "bg": new Howl({
           src: [this.base_path + 'ingame/Reloaded Games - Music.ogg'],
           preload: true,
-          autoplay: true,
+          autoplay: false,
           loop: true,
           volume: .75
         })
+      }
+
+      // detect any user interaction
+      // window.addEventListener('mousemove', this.autoplay);
+      // window.addEventListener('scroll', this.autoplay);
+      // window.addEventListener('keydown', this.autoplay);
+      // window.addEventListener('click', this.autoplay);
+      // window.addEventListener('touchstart', this.autoplay);
+    }
+
+    autoplay() {
+      if(!this.sounds['bg'].playing()) {
+        this.play('bg');
       }
     }
 

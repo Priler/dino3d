@@ -42,7 +42,7 @@ function nebulaCreateDynoDustEmitter(spd = 5) {
         ddZone.z = z;
     }
 
-    setP(0, -1.5, 15.5);
+    setP(0, -1.1, 15.5);
 
     dynoDustEmitter.emit();
 

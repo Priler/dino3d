@@ -5,7 +5,7 @@ var
 	autoprefixer	= require("gulp-autoprefixer"),
 	cleancss		= require("gulp-clean-css"),
 	rename			= require("gulp-rename"),
-	include			= require("gulp-include"),
+	rigger			= require("gulp-rigger"),
 	minify			= require("gulp-minify");
 
 gulp.task("reload-css", function() {
@@ -24,8 +24,7 @@ gulp.task("reload-css", function() {
 
 gulp.task("reload-js", function() {
 	return gulp.src('./js/src/build.js')
-	.pipe(include())
-		.on('error', console.log)
+	.pipe(rigger())
 	.pipe(minify({
 		ext: {
 			min: '.min.js',

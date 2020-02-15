@@ -12,22 +12,12 @@ load_manager.set_loader('flowers', ['ground'], function() {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
 
-      // let mesh = builder.createMesh();
-      // mesh.castShadow = true;
-      // mesh.receiveShadow = true;
-      // mesh.position.y = nature.cache.ground.box.max.y + 0.025;
-
-
       flowers[i] = builder;
-    });
-  }
 
-  var flTimeout = setInterval(function() {
-    if(flowers.length - 1 == flowersCount) {
-        clearInterval(flTimeout); 
-
+      if(flowers.length - 1 == flowersCount) {
         load_manager.set_vox('flowers', flowers);
         load_manager.set_status('flowers', true);
-    }
-  }, 10);
+      }
+    });
+  }
 });

@@ -12,25 +12,12 @@ load_manager.set_loader('rocks', ['ground'], function() {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
 
-      // let mesh = builder.createMesh();
-
-      // mesh.castShadow = true;
-      // mesh.receiveShadow = true;
-
-      // mesh.position.y = nature.cache.ground.box.max.y + 0.025;
-      // mesh.position.z = 14;
-      // mesh.rotation.y = Math.PI / 2;
-
       rocks[i] = builder;
-    });
-  }
 
-  var rTimeout = setInterval(function() {
-    if(rocks.length - 1 == rocksCount) {
-        clearInterval(rTimeout); 
-
+      if(rocks.length - 1 == rocksCount) {
         load_manager.set_vox('rocks', rocks);
         load_manager.set_status('rocks', true);
-    }
-  }, 10);
+      }
+    });
+  }
 });

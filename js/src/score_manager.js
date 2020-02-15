@@ -27,7 +27,7 @@ class ScoreManager {
       {
         this.canvas = document.createElement('canvas');
         this.canvas.id = 'score-counter';
-        this.canvas.width = 400;
+        this.canvas.width = 450;
         this.canvas.height = 60;
         document.body.appendChild(this.canvas);
 
@@ -110,7 +110,12 @@ class ScoreManager {
     update(timeDelta) {
       this.add(this.add_vel * timeDelta);
 
-      let text = 'HI ' + Math.trunc(this.highest_score).pad(this.zero_padding);
+      let text = '';
+      if(this.highest_score > 9999) {
+        text = 'HI ' + (this.highest_score / 1000).toFixed(1) +'K';
+      } else {
+        text = 'HI ' + Math.trunc(this.highest_score).pad(this.zero_padding);
+      }
 
       if(this.is_flashing) {
         if(Math.trunc(this.clock.getElapsedTime() * 4) % 2) {
