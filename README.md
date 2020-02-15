@@ -1,6 +1,6 @@
 # 🦖 T-Rex Run 3D
 Play the game here: http://priler.github.io/dino3d/low.html  
-Alt. version with SAO and shadows: http://priler.github.io/dino3d/
+Alt. version with best quality settings for high-end PCs: http://priler.github.io/dino3d/
 
 # Description
 T-Rex Run 3D is a ThreeJS WebGL game made as an experiment.  
@@ -28,6 +28,19 @@ https://trello.com/b/Pt4FSqOi/t-rex-run-3d
   - Fixed ability to jump from bend down position
   - Fixed disappearing ground textures
   - Other minor bug fixes
+
+- Update 2
+  - Voxel landscape added
+  - Palm trees has been removed, instead there is scorpions, skulls, etc
+  - UI is now fully in pixel art style
+  - Load screen added
+  - New dino reaction on collisions
+  - W & S keys was removed
+  - Nature Manager & Enemy Manager was fully rewritten for better performance and new feautures
+  - "Black screens" bug fixed
+  - High jumps bug fixed
+  - Scores display fixed
+  - Moving objects stuttering fixed (never use .splice() again :3)
 
 ## Credits
 https://threejs.org/ - WebGL 3D Library  
