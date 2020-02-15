@@ -147,8 +147,7 @@ class GameManager {
         nature.config.levels.second.spawn = load_manager.get_certain_mesh('misc', ['tumbleweed', 'desert_skull', 'scorpion', 'rocks', 'flowers', 'trees'], 'misc_type', true);
         nature.config.levels.third.spawn = load_manager.get_certain_mesh('misc', ['tumbleweed', 'trees'], 'misc_type', true);
 
-        // nature.config.levels.playground.spawn = load_manager.get_certain_mesh('misc', ['desert_skull', 'rocks', 'flowers'], 'misc_type', true);
-        nature.config.levels.playground.spawn = load_manager.get_certain_mesh('misc', ['flowers'], 'misc_type', true);
+        nature.config.levels.playground.spawn = load_manager.get_certain_mesh('misc', ['desert_skull', 'rocks', 'flowers'], 'misc_type', true);
 
         nature.config.levels.water.spawn = load_manager.get_certain_mesh('misc', ['fish'], 'misc_type', true);
         nature.config.levels.water2.spawn = load_manager.get_certain_mesh('misc', ['seaweed', 'rocks'], 'misc_type', true);
