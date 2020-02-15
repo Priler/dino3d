@@ -51,7 +51,7 @@ class EnemyManager {
 				"buffer": 10
 			}, // max ammount of enemy groups
 			"vel": 0, // overall speed of all enemies and other moving elements in-game
-			"score_z": 13, // z offset when score will be granted
+			"initial_z": -50,
 			"remove_z": 25, // z offset when enemy will be removed
 			"z_distance": {
 				"cactus": 20,
@@ -104,8 +104,10 @@ class EnemyManager {
 		};
 
 		// fill the pool
-		for(let i = 0; i < this.config.max_amount.pool.cactus; i++) {
-			this.pool.addItem(this.createEnemy('cactus'));
+		if(!this.pool.items.length) {
+			for(let i = 0; i < this.config.max_amount.pool.cactus; i++) {
+				this.pool.addItem(this.createEnemy('cactus'));
+			}
 		}
 
 		// initial buffer fill
@@ -166,12 +168,8 @@ class EnemyManager {
 	spawn() {
 		let rand = this.pool.getRandomKey();
 
-		console.log("RAND KEY", rand);
-
 		if(rand !== false) {
 			let enemiesGroup = this.pool.getItem(rand);
-
-			console.log("ENEMY TYPE = ", enemiesGroup[0].enemy_type);
 
 			for(let i = 0; i < enemiesGroup.length; i++) {
 				
@@ -213,7 +211,7 @@ class EnemyManager {
 						// head
 						if(!this.buffer.length) {
 							// first
-							enemiesGroup[i].position.z = -(zRand * 2);
+							enemiesGroup[i].position.z = this.config.initial_z;
 						} else {
 							// chain
 							if(this.pool.getItem( this.buffer[ this.buffer.indexOf(this.buffer.leader) ] )[0].enemy_type == 'ptero') {
@@ -328,12 +326,11 @@ class EnemyManager {
 
 	reset() {
 		for(let i = 0; i < this.buffer.length; i++) {
-			for(let j = 0; j < this.buffer[i].length; j++) {
-				scene.remove(this.buffer[i][j]);
-			}
+			this.despawn();
 		}
 
 		this.buffer = [];
+		delete this.buffer.leader;
 	}
 
 	spawnPteros() {
