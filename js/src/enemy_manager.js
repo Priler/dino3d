@@ -316,6 +316,8 @@ class EnemyManager {
 					enemiesGroup[0].position.y = this.get_ptero_y('ptero');
 					enemiesGroup[0].position.z = this.findZForPtero();
 				}
+
+				this.enemies.push(enemiesGroup);
 			}
 
 			for(let e = 0; e < this.enemies[i].length; e++) {
