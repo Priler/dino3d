@@ -227,6 +227,11 @@ class EnemyPool {
 	returnKey(k) {
 		this.keys.push(k);
 	}
+
+	reset() {
+		this.items = [];
+		this.keys = [];
+	}
 }
 
 class EnemyManager {
@@ -305,7 +310,7 @@ class EnemyManager {
 
 		// initial buffer fill
 		for(let i = 0; i < this.config.max_amount.buffer; i++) {
-			this.spawn();
+			this.buffer.push(this.spawn());
 		}
 	}
 
@@ -444,21 +449,21 @@ class EnemyManager {
 
 			// push to buffer
 			this.buffer.leader = rand;
-			this.buffer.push(rand);
+			return rand;
 		}
 	}
 
 	despawn(k = false) {
-		if(!this.buffer.length) {
-			return false;
-		}
 
 		// identify key
 		let key = null;
+
 		if(k) {
-			key = this.buffer.splice(this.buffer.indexOf(k), 1)[0];
+			// key = this.buffer.splice(this.buffer.indexOf(k), 1)[0];
+			key = this.buffer[this.buffer.indexOf(k)];
 		} else {
-			key = this.buffer.splice(0, 1)[0];
+			// key = this.buffer.splice(0, 1)[0];
+			key = this.buffer[0];
 		}
 
 		// hide mesh
@@ -477,8 +482,8 @@ class EnemyManager {
 
 			// despawn, if required
 			if(e[0].position.z > this.config.remove_z) {
-				this.despawn();
-				this.spawn();
+				this.despawn(this.buffer[i]);
+				this.buffer[i] = this.spawn(); // just replace the key
 				continue;
 			}
 
@@ -522,6 +527,13 @@ class EnemyManager {
 			this.despawn();
 		}
 
+		for(let i = 0; i < this.pool.items.length; i++) {
+			for(let j = 0; j < this.pool.items[i].length; j++) {
+				scene.remove(this.pool.items[i][j]);
+			}
+		}
+
+		this.pool.reset();
 		this.buffer = [];
 		delete this.buffer.leader;
 	}
@@ -938,8 +950,8 @@ DLight.shadow.radius = 1;
  Shadows lower than 2K triggers twitches/flickers on moving objects.
  Better fix this later;
  */
-DLight.shadow.mapSize.width = 1024 * 4;
-DLight.shadow.mapSize.height = 1024 * 4;
+DLight.shadow.mapSize.width = 1024 * 3;
+DLight.shadow.mapSize.height = 1024 * 3;
 
 DLight.shadow.camera.scale.y = 10;
 DLight.shadow.camera.scale.x = 20;

@@ -5,7 +5,7 @@
 const config = {
 	"base_path": "/dino3d/",
 	"logs": true,
-	"debug": false,
+	"debug": true,
 	"camera": {
 		"fov": 45,
 		"aspect": window.innerWidth/window.innerHeight,
