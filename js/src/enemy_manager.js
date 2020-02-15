@@ -270,11 +270,12 @@ class EnemyManager {
 		for(let i = 0; i < this.enemies.length; i++) {
 			if(this.enemies[i][0].position.z > this.config.remove_z) {
 				// rechain
+				let enemiesGroup = this.enemies.splice(i, 1)[0];
 
-				if(this.enemies[i][0].enemy_type == 'cactus')
+				if(enemiesGroup[0].enemy_type == 'cactus')
 				{
 					// cactus
-					for(let x = 0; x < this.enemies[i].length; x++)
+					for(let x = 0; x < enemiesGroup.length; x++)
 					{
 						// rescale
 						let rescaleRand = 1;
@@ -285,35 +286,35 @@ class EnemyManager {
 							// head
 							rescaleRand = this.get_rr('cactus');
 						}
-						this.enemies[i][x].scale.set(rescaleRand, rescaleRand, rescaleRand);
+						enemiesGroup[x].scale.set(rescaleRand, rescaleRand, rescaleRand);
 
 						// random X position
-			            this.enemies[i][x].position.x = this.random(
+			            enemiesGroup[x].position.x = this.random(
 			              this.config.x_random_range.cactus[1],
 			              this.config.x_random_range.cactus[0]
 			            );
 
 						// random Y rotate
 			             let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
-			             this.enemies[i][x].rotateY(THREE.Math.degToRad(yRandomRotate));
+			             enemiesGroup[x].rotateY(THREE.Math.degToRad(yRandomRotate));
 
 						// reposition
 						let zRand = this.get_z('cactus');
 						if(x > 0) {
 							// tail
-							this.enemies[i][x].position.z = -(-this.enemies[i][x-1].position.z + (rescaleRand * 1.7));
+							enemiesGroup[x].position.z = -(-enemiesGroup[x-1].position.z + (rescaleRand * 1.7));
 						} else {
 							// head
 							// enemiesGroup[0].position.z = -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
 							let lEnemy = this.eLast('cactus');
-							this.enemies[i][0].position.z = -(-lEnemy[0].position.z + zRand);
+							enemiesGroup[0].position.z = -(-lEnemy[0].position.z + zRand);
 						}
 					}
 				} else
 				{
 					// ptero
-					this.enemies[i][0].position.y = this.get_ptero_y('ptero');
-					this.enemies[i][0].position.z = this.findZForPtero();
+					enemiesGroup[0].position.y = this.get_ptero_y('ptero');
+					enemiesGroup[0].position.z = this.findZForPtero();
 				}
 			}
 
