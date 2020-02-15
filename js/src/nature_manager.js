@@ -97,7 +97,7 @@ class NatureManager {
           "x_random_range": [-3, 3],
         },
         "flowers": {
-          "rescale_rand": [1, 2],
+          "rescale_rand": [.7, 1.3],
           "x_random_range": [-3, 3],
         },
         "trees": {

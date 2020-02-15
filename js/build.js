@@ -192,33 +192,67 @@ class AudioManager {
     }
   }
 /**
- * Enemy class v3.
- * This enemy spawner gererates N number of mesh groups(!) and renders them all to scene.
- * For optimization purposes, renderer.far or camera frustum must be limited.
+ * Enemy class v4.
+ * This enemy manager gererates N number of mesh groups(!) and puts them to pool.
+ * And only N of them will be randomly rendered within the buffer.
  * Also, materials & geometry is cached.
  * @type {EnemyManager}
  */
 
+class EnemyPool {
+
+	constructor() {
+		this.items = [];
+		this.keys = [];
+	}
+
+	addItem(item) {
+		this.items.push(item);
+		this.keys.push(this.items.length-1);
+	}
+
+	getItem(k) {
+		return this.items[k];
+	}
+
+	getRandomKey() {
+		if(!this.keys.length) {
+			return false;
+		}
+
+		let i = Math.floor(Math.random() * this.keys.length);
+		return this.keys.splice(i, 1)[0];
+	}
+
+	returnKey(k) {
+		this.keys.push(k);
+	}
+}
+
 class EnemyManager {
 	constructor() {
-		this.enemies = [];
+		this.pool = new EnemyPool();
+		this.buffer = [];
 		this.clock = new THREE.Clock();
 		this.config = {
 			"enable_collisions": true,
 			"max_amount": {
-				"cactus": 50,
-				"ptero": 10
+				"pool": {
+					"cactus": 50,
+					"ptero": 15
+				},
+				"buffer": 10
 			}, // max ammount of enemy groups
 			"vel": 0, // overall speed of all enemies and other moving elements in-game
 			"score_z": 13, // z offset when score will be granted
 			"remove_z": 25, // z offset when enemy will be removed
 			"z_distance": {
 				"cactus": 20,
-				"ptero": 20
+				"ptero": 40
 			}, // z distance between enemies
 			"z_distance_rand": {
 				"cactus": [.9, 2.5],
-				"ptero": [.7, 4]
+				"ptero": [.7, 1.5]
 			}, // z distance random rescale range
 			"rescale_rand": {
 				"cactus": [.6, 1.2]
@@ -233,7 +267,9 @@ class EnemyManager {
 			"tail_rescale_rand": [[.6, .9], [.4, .7]], // tails rescale rand
 
 			"ptero_anim_speed": 0.10, // lower is faster
-			"ptero_y_rand": [0, 1.3, 3.5] // random ptero y positions
+			"ptero_y_rand": [0, 1.3, 3.5], // random ptero y positions
+
+			"ptero_z_speedup": -35
 		}
 
 		this.cache = {
@@ -260,57 +296,26 @@ class EnemyManager {
 			"material": await load_manager.get_mesh_material('ptero')
 		};
 
-		// spawn enemies
-		for(let i = 0; i < this.config.max_amount.cactus; i++) {
-			this.spawn('cactus');
+		// fill the pool
+		for(let i = 0; i < this.config.max_amount.pool.cactus; i++) {
+			this.pool.addItem(this.createEnemy('cactus'));
+		}
+
+		// initial buffer fill
+		for(let i = 0; i < this.config.max_amount.buffer; i++) {
+			this.spawn();
 		}
 	}
 
-	reset() {
-		for(let i = 0; i < this.enemies.length; i++) {
-			for(let j = 0; j < this.enemies[i].length; j++) {
-				scene.remove(this.enemies[i][j]);
-			}
-		}
-
-		this.enemies = [];
-	}
-
-	spawnPteros() {
-		for(let i = 0; i < this.config.max_amount.ptero; i++) {
-			this.spawn('ptero');
-		}
-	}
-
-	findZForPtero(min_diff = 25, min_distance_btw = 50) {
-		let last_z = 0;
-		let ptero_last = this.eLast('ptero');
-		if(ptero_last) {
-			last_z = ptero_last[0].position.z;
-		}
-
-		for(let i = 1; i < this.enemies.length; i++) {
-			let diff = (-this.enemies[i][0].position.z) - (-this.enemies[i-1][this.enemies[i-1].length-1].position.z);
-			let z = -(-this.enemies[i][0].position.z - (diff / 2));
-			if( diff > min_diff && (-last_z + diff + min_distance_btw) < -z ) {
-				// console.log("Z FOUND", z, "DIFF IS", diff);
-				return z;
-			}
-		}
-
-		// if not found
-		// console.log("Z FOR PTERO NOT FOUND, CHAINING TO THE END");
-		let zRand = this.get_z('ptero');
-		return -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
-	}
-
-	spawn(type = 'cactus', tail = false, tail_number = 0) {
+	createEnemy(type = 'cactus', tail = false, tail_number = 0) {
+		// get random mesh (within given type)
 		let rand = Math.floor(Math.random() * load_manager.assets[type].mesh.length);
 		let mesh = new THREE.Mesh(
 			this.cache[type].geometry[rand],
 			this.cache[type].material[rand]
 		);
 
+		// basic mesh setup
 		mesh.enemy_type = type;
 		mesh.castShadow = true;
 		if(type == 'cactus') {
@@ -321,121 +326,213 @@ class EnemyManager {
 		}
 		let enemiesGroup = [mesh];
 
-		if(type == 'cactus')
-		{
-			// random rescale
-			let rescaleRand = 1;
+		if(type == 'cactus') {
+			// randomly generate cactus tails
 			if(tail) {
-				// tail rescale
-				rescaleRand = this.random(this.config.tail_rescale_rand[tail_number][0], this.config.tail_rescale_rand[tail_number][1]);
-			} else {
-				// head rescale
-				rescaleRand = this.get_rr('cactus');
-			}
-			enemiesGroup[0].scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-			// random X position
-            enemiesGroup[0].position.x = this.random(
-              this.config.x_random_range.cactus[1],
-              this.config.x_random_range.cactus[0]
-            );
-
-			// random Y rotate
-             let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
-             enemiesGroup[0].rotateY(THREE.Math.degToRad(yRandomRotate));
-
-			// reposition
-			// enemiesGroup[0].position.x = 0; // (nature.cache.ground.box.max.x / 2) - (enemy.userData['box3d'].max.x)
-			enemiesGroup[0].position.y = nature.cache.ground.box.max.y + -nature.cache.ground.box.min.y - 2.5;
-
-			let zRand = this.get_z('cactus');
-			if(tail) {
-				// tail z
-				if(tail_number == 0) {
-					enemiesGroup[0].position.z = -(-tail + (rescaleRand * 1.7));
-				} else {
-					enemiesGroup[0].position.z = -(-tail + (rescaleRand * 1.9));
-				}
-			} else {
-				if(!this.enemies.length) {
-					// first z
-					enemiesGroup[0].position.z = -(zRand * 2);
-				} else {
-					// chain z
-					// (-this.enemies[this.enemies.length-1].position.z + z_distance + (rr*1.8));
-					enemiesGroup[0].position.z = -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
-				}
-			}
-
-			if(tail) {
+				// return tail
 				return enemiesGroup[0];
-			} else if(type == 'cactus') {
-				// only cactus type enemies can have tails
+			} else {
 				if(Math.floor(Math.random() * 100) < this.config.chance_to_spawn_tail[0])
 				{
-					// spawn first tail
-					enemiesGroup.push(this.spawn('cactus', enemiesGroup[0].position.z, 0));
+					// first tail
+					enemiesGroup.push(this.createEnemy('cactus', true, 0));
 
 					if(Math.floor(Math.random() * 100) < this.config.chance_to_spawn_tail[1])
 					{
-						// spawn second tail
-						enemiesGroup.push(this.spawn('cactus', enemiesGroup[1].position.z, 1));
+						// second tail
+						enemiesGroup.push(this.createEnemy('cactus', true, 1));
 					}
 				}
 			}
-		} else {
-			// ptero
-
-			// reposition
-			enemiesGroup[0].position.x = 0; // (nature.cache.ground.box.max.x / 2) - (enemy.userData['box3d'].max.x)
-			enemiesGroup[0].position.y =  this.get_ptero_y('ptero');
-
-			enemiesGroup[0].position.z = this.findZForPtero();
 		}
 
-		// add to pool
-		this.enemies.push(enemiesGroup);
-
-		// add to scene
+		// render to scene
 		for(let e = 0; e < enemiesGroup.length; e++) {
+			enemiesGroup[e].visible = false;
 			scene.add(enemiesGroup[e]);
+		}
 
-			// test
-			// enemiesGroup[e].xbox = new THREE.BoxHelper( enemiesGroup[e], 0xffff00 );
-			// scene.add(enemiesGroup[e].xbox);
+		// return
+		return enemiesGroup;
+	}
+
+	spawn() {
+		let rand = this.pool.getRandomKey();
+
+		console.log("RAND KEY", rand);
+
+		if(rand !== false) {
+			let enemiesGroup = this.pool.getItem(rand);
+
+			console.log("ENEMY TYPE = ", enemiesGroup[0].enemy_type);
+
+			for(let i = 0; i < enemiesGroup.length; i++) {
+				
+				// position Y
+				enemiesGroup[i].position.y = nature.cache.ground.box.max.y + -nature.cache.ground.box.min.y - 2.5;
+
+				if(enemiesGroup[i].enemy_type == 'cactus') {
+
+					// random scale
+					let rescaleRand = 1;
+					if(i > 0) {
+						// tail
+						rescaleRand = this.random(this.config.tail_rescale_rand[i-1][0], this.config.tail_rescale_rand[i-1][1]);
+					} else {
+						rescaleRand = this.get_rr('cactus');
+					}
+					enemiesGroup[i].scale.set(rescaleRand, rescaleRand, rescaleRand);
+
+					// random x position
+		            enemiesGroup[i].position.x = this.random(
+		              this.config.x_random_range.cactus[1],
+		              this.config.x_random_range.cactus[0]
+		            );
+
+		            // random y rotation
+					let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
+					enemiesGroup[i].rotateY(THREE.Math.degToRad(yRandomRotate));
+
+					// position Z
+					let zRand = this.get_z('cactus');
+					if(i > 0) {
+						// tail
+						if(i == 1) {
+							enemiesGroup[i].position.z = -(-enemiesGroup[i-1].position.z + (rescaleRand * 1.7));
+						} else {
+							enemiesGroup[i].position.z = -(-enemiesGroup[i-1].position.z + (rescaleRand * 1.9));
+						}
+					} else {
+						// head
+						if(!this.buffer.length) {
+							// first
+							enemiesGroup[i].position.z = -(zRand * 2);
+						} else {
+							// chain
+							if(this.pool.getItem( this.buffer[ this.buffer.indexOf(this.buffer.leader) ] )[0].enemy_type == 'ptero') {
+								// after ptero
+								let last = this.pool.getItem(this.buffer.leader);
+								zRand = this.get_z('ptero');
+								enemiesGroup[i].position.z = -(-last[last.length - 1].position.z + zRand);
+							} else {
+								// after cactus
+								let last = this.pool.getItem(this.buffer.leader);
+								enemiesGroup[i].position.z = -(-last[last.length - 1].position.z + zRand);
+							}
+						}
+					}
+
+				} else {
+					
+					// ptero
+					enemiesGroup[0].position.x = 0;
+					enemiesGroup[0].position.y = this.get_ptero_y();
+
+					let zRand = this.get_z('ptero');
+					if(this.buffer.length) {
+						// chain
+						let last = this.pool.getItem(this.buffer.leader);
+						enemiesGroup[i].position.z = -(-last[last.length - 1].position.z + zRand);
+					} else {
+						// first
+						enemiesGroup[0].position.z = -(zRand * 2);
+					}
+
+				}
+
+				// make visible
+				enemiesGroup[i].visible = true;
+			}
+
+			// push to buffer
+			this.buffer.leader = rand;
+			this.buffer.push(rand);
 		}
 	}
 
-	eFind(type) {
-		let enemyGroups = [];
-		for(let i = 0; i < this.enemies.length; i++) {
-			if(this.enemies[i][0].enemy_type == type) {
-				enemyGroups.push(this.enemies[i]);
-			}
+	despawn(k = false) {
+		if(!this.buffer.length) {
+			return false;
 		}
 
-		return enemyGroups;
+		// identify key
+		let key = null;
+		if(k) {
+			key = this.buffer.splice(this.buffer.indexOf(k), 1)[0];
+		} else {
+			key = this.buffer.splice(0, 1)[0];
+		}
+
+		// hide mesh
+		let enemiesGroup = this.pool.getItem(key);
+		for(let e = 0; e < enemiesGroup.length; e++ ) {
+			enemiesGroup[e].visible = false;
+		}
+
+		// push key back
+		this.pool.returnKey(key);
 	}
 
-	eLast(type) {
-		for(let j = this.enemies.length-1; j > 0; j--) {
-			if(this.enemies[j][0].enemy_type == type) {
-				return this.enemies[j];
+	move(timeDelta) {
+		for(let i = 0; i < this.buffer.length; i++) {
+			let e = this.pool.getItem(this.buffer[i]);
+
+			// despawn, if required
+			if(e[0].position.z > this.config.remove_z) {
+				this.despawn();
+				this.spawn();
+				continue;
+			}
+
+			// move by Z & detect collisions
+			for(let j = 0; j < e.length; j++) {
+				if(e[j].enemy_type == 'ptero') {
+					// ptero
+					if(e[j].position.z > this.config.ptero_z_speedup) {
+						e[j].position.z += (this.config.vel * 1.7) * timeDelta;
+					} else {
+						e[j].position.z += this.config.vel * timeDelta;
+					}
+				} else {
+					// cactus
+					e[j].position.z += this.config.vel * timeDelta;
+				}
+
+				/**
+				 * @TODO
+				 * Optimization can be done.
+				 */
+				if(this.config.enable_collisions) {
+					// check collision with player
+					let eBox = this.box3 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+					eBox.setFromObject(e[j]);
+
+					let pBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+					pBox.setFromObject(player.collisionBox);
+
+					if(eBox.intersectsBox(pBox)) {
+						game.stop();
+						return;
+					}
+				}
 			}
 		}
-
-		return false;
 	}
 
-	eCount(type) {
-		let count = 0;
-		for(let i = 0; i < this.enemies.length; i++) {
-			if(this.enemies[i][0].enemy_type == type) {
-				count++;
+	reset() {
+		for(let i = 0; i < this.buffer.length; i++) {
+			for(let j = 0; j < this.buffer[i].length; j++) {
+				scene.remove(this.buffer[i][j]);
 			}
 		}
 
-		return count;
+		this.buffer = [];
+	}
+
+	spawnPteros() {
+		for(let i = 0; i < this.config.max_amount.pool.ptero; i++) {
+			this.pool.addItem(this.createEnemy('ptero'));
+		}
 	}
 
 	random(from, to, float = true) {
@@ -455,94 +552,8 @@ class EnemyManager {
 		return this.config.z_distance[type] * zrr;
 	}
 
-	get_ptero_y(type) {
+	get_ptero_y() {
 		return (nature.cache.ground.box.max.y + -nature.cache.ground.box.min.y - 2.5) + this.config.ptero_y_rand[this.random(0, this.config.ptero_y_rand.length, false)];
-	}
-
-	move(timeDelta) {
-		for(let i = 0; i < this.enemies.length; i++) {
-			if(this.enemies[i][0].position.z > this.config.remove_z) {
-				// rechain
-				let enemiesGroup = this.enemies.splice(i, 1)[0];
-
-				if(enemiesGroup[0].enemy_type == 'cactus')
-				{
-					// cactus
-					for(let x = 0; x < enemiesGroup.length; x++)
-					{
-						// rescale
-						let rescaleRand = 1;
-						if(x > 0) {
-							// tail
-							rescaleRand = this.random(this.config.tail_rescale_rand[x-1][0], this.config.tail_rescale_rand[x-1][1]);
-						} else {
-							// head
-							rescaleRand = this.get_rr('cactus');
-						}
-						enemiesGroup[x].scale.set(rescaleRand, rescaleRand, rescaleRand);
-
-						// random X position
-			            enemiesGroup[x].position.x = this.random(
-			              this.config.x_random_range.cactus[1],
-			              this.config.x_random_range.cactus[0]
-			            );
-
-						// random Y rotate
-			             let yRandomRotate = this.random(this.config.y_random_rotate.cactus[0], this.config.y_random_rotate.cactus[1]);
-			             enemiesGroup[x].rotateY(THREE.Math.degToRad(yRandomRotate));
-
-						// reposition
-						let zRand = this.get_z('cactus');
-						if(x > 0) {
-							// tail
-							enemiesGroup[x].position.z = -(-enemiesGroup[x-1].position.z + (rescaleRand * 1.7));
-						} else {
-							// head
-							// enemiesGroup[0].position.z = -(-this.enemies[this.enemies.length-1][this.enemies[this.enemies.length-1].length-1].position.z + zRand);
-							let lEnemy = this.eLast('cactus');
-							enemiesGroup[0].position.z = -(-lEnemy[0].position.z + zRand);
-						}
-					}
-				} else
-				{
-					// ptero
-					enemiesGroup[0].position.y = this.get_ptero_y('ptero');
-					enemiesGroup[0].position.z = this.findZForPtero();
-				}
-
-				this.enemies.push(enemiesGroup);
-			}
-
-			for(let e = 0; e < this.enemies[i].length; e++) {
-				// move
-				if(this.enemies[i][e].enemy_type == 'cactus') {
-					// this.enemies[i][e].translateX(this.config.vel * timeDelta);
-					this.enemies[i][e].position.z += this.config.vel * timeDelta;
-				} else {
-					// this.enemies[i][e].translateZ(this.config.vel * timeDelta);
-					this.enemies[i][e].position.z += this.config.vel * timeDelta;
-				}
-				// this.enemies[i][e].xbox.update();
-
-				/**
-				 * @TODO
-				 * Optimization can be done.
-				 */
-				if(this.config.enable_collisions) {
-					// check collision with player
-					let eBox = this.box3 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
-					eBox.setFromObject(enemy.enemies[i][e]);
-
-					let pBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
-					pBox.setFromObject(player.collisionBox);
-
-					if(eBox.intersectsBox(pBox)) {
-						game.stop();
-						return;
-					}
-				}
-			}
-		}
 	}
 
     increase_velocity(add = 1, init = false) {
@@ -614,78 +625,19 @@ class EnemyManager {
         }
     }
 
-    normalizePteroPos(ptero, normalizer = 10) {
-    	let ptero_pos = -ptero.position.z;
-
-    	for(let i = 0; i < this.enemies.length; i++) {
-    		let enemy = this.enemies[i][0];
-
-    		if(enemy.enemy_type == 'cactus') {
-    			let enemy_pos = -enemy.position.z;
-    			let range = 4 * this.enemies[i].length; // z width of our check
-
-    			if( (ptero_pos > enemy_pos-range) && (ptero_pos < enemy_pos+range) )
-    			{
-    				// in range, reposition ptero
-    				// if( (ptero_pos > enemy_pos-range) ) {
-    				// 	z = -(enemy_pos + range);
-    				// } else {
-    				// 	z = -(enemy_pos - range);
-    				// }
-
-    				let diff = (enemy_pos - (-this.enemies[i-1][0].position.z));
-    				ptero.position.z = -(-this.enemies[i-1][0].position.z + diff / 2);
-
-    				if(diff < 25) {
-    					ptero.position.y = this.config.ptero_y_rand[this.config.ptero_y_rand.length - 1];
-    				}
-    			}
-    		}
-    	}
-    }
-
-    normalizePterozzzZ(z, normalizer_correction = 1, normalizer = 15) {
-
-    	return z; // this function not works, pass for now
-
-    	for(let i = 0; i < this.enemies.length; i++) {
-    		let e = this.enemies[i][this.enemies[i].length-1];
-    		if(e.enemy_type == 'cactus') {
-    			if( (-z >= (-e.position.z - normalizer)) && (-z <= (-e.position.z + normalizer)) ) {
-    				if( this.enemies[i].length > 1 ) {
-    					normalizer_correction = this.enemies[i].length * 1.5;
-    				}
-
-    				if( (-z >= (-e.position.z - normalizer)) ) {
-    					// too close
-    					z = -(-z + (normalizer * normalizer_correction));
-    				} else {
-    					// too far
-    					z = -(-z - (normalizer * normalizer_correction));
-    				}
-
-    				// recheck last 5
-    				if(i > 0) {
-    					i = i - 5;
-    				}
-    			}
-    		}
-    	}
-
-    	return z;
-    }
-
     pteroNextFrame() {
-        for(let i = 0; i < this.enemies.length; i++) {
-        	if(this.enemies[i][0].enemy_type == 'ptero') {
-        		// animate
-        		this.enemies[i][0].current_frame++;
+        for(let i = 0; i < this.buffer.length; i++) {
+        	let e = this.pool.getItem(this.buffer[i])[0];
 
-        		if(this.enemies[i][0].current_frame > this.cache.ptero.geometry.length - 1) {
-        			this.enemies[i][0].current_frame = 0;
+        	if(e.enemy_type == 'ptero') {
+        		// animate
+        		e.current_frame++;
+
+        		if(e.current_frame > this.cache.ptero.geometry.length - 1) {
+        			e.current_frame = 0;
         		}
 
-        		this.enemies[i][0].geometry = this.cache.ptero.geometry[this.enemies[i][0].current_frame];
+        		e.geometry = this.cache.ptero.geometry[e.current_frame];
         	}
         }
     }
@@ -1457,7 +1409,7 @@ class NatureManager {
           "x_random_range": [-3, 3],
         },
         "flowers": {
-          "rescale_rand": [1, 2],
+          "rescale_rand": [.7, 1.3],
           "x_random_range": [-3, 3],
         },
         "trees": {
