@@ -9,7 +9,7 @@ All the graphics was hand crafted with Magica Voxel software, so that the overal
 *The code has NOT been polished and is provided "as is". There are a lot of code that are redundant and there are tons of improvements that can be made.*
 
 # Screenshot
-![T-Rex Run 3D](https://i.imgur.com/8yTGRmC.png)
+![T-Rex Run 3D](https://i.imgur.com/fESLYlF.png)
 
 # ToDo
 https://trello.com/b/Pt4FSqOi/t-rex-run-3d
