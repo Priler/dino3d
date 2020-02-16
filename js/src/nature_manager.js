@@ -9,7 +9,8 @@ class NatureManager {
   constructor() {
     this.config = {
       "remove_z": {
-        "ground": 50
+        "ground": 50,
+        "earth": 250
       },
       "levels": {
         "playground": {
@@ -131,7 +132,8 @@ class NatureManager {
       "earth": {
         "box": null,
         "geometry": null,
-        "material": null
+        "material": null,
+        "texture": null
       },
       "ground": {
         "box": null,
@@ -162,24 +164,60 @@ class NatureManager {
     };
   }
 
-  initEarth() {
+  initEarth(chunks = 3) {
     // earth
     if(!this.cache.earth.geometry) {
+
+      this.cache.earth.texture = load_manager.get_texture('t_ground').top;
+      this.cache.earth.texture.wrapS = this.cache.earth.texture.wrapT = THREE.RepeatWrapping;
+      this.cache.earth.texture.offset.set( 0, 0 );
+      this.cache.earth.texture.repeat.set( 100 / 8, 250 / 16 );
+
       this.cache.earth.geometry = new THREE.BoxGeometry( 100, 0, 250 );
-      this.cache.earth.material = new THREE.MeshLambertMaterial( {color: 0xEFBC5C} ); // 0xD6B161
+      this.cache.earth.material = new THREE.MeshLambertMaterial( {map: this.cache.earth.texture} ); // 0xD6B161
     }
 
-    // zero level
-    this.earth = new THREE.Mesh(this.cache.earth.geometry, this.cache.earth.material);
-    this.earth.receiveShadow = true;
+    for(let i = 0; i < chunks; i++) {
+      let chunk = new THREE.Mesh(this.cache.earth.geometry, this.cache.earth.material);
+      chunk.receiveShadow = true;
 
-    this.earth.position.x = 0;
-    this.earth.position.y = nature.cache.ground.box.min.y - .5;
-    this.earth.position.z = -20;
+      chunk.position.x = 0;
+      chunk.position.y = nature.cache.ground.box.min.y - .5;
 
-    this.cache.earth.box = new THREE.Box3().setFromObject(this.earth);
+      if(i > 0) {
+        // reposition
+        let lChunk = this.earth_chunks[this.earth_chunks.length-1];
+        chunk.position.z = this.earth_chunks[this.earth_chunks.length-1].position.z - (250 * lChunk.scale.z);
+      } else {
+        // first
+        chunk.position.z = -20;
+      }
 
-    scene.add( this.earth );
+      if(!this.cache.earth.box) {
+        this.cache.earth.box = new THREE.Box3().setFromObject(chunk);
+      }
+
+      this.earth_chunks.push(chunk)
+
+      scene.add( chunk );
+    }
+
+    // set leader
+    this.earth_chunks.leader = this.earth_chunks.length - 1;
+  }
+
+  moveEarth(timeDelta) {
+    for(let i = 0; i < this.earth_chunks.length; i++) {
+      if(this.earth_chunks[i].position.z > this.config.remove_z.earth) {
+        // re move
+        let lChunk = this.earth_chunks[this.earth_chunks.leader];
+        this.earth_chunks[i].position.z = lChunk.position.z - (250 * lChunk.scale.z);
+        this.earth_chunks.leader = i;
+      }
+
+      // move
+      this.earth_chunks[i].position.z += enemy.config.vel * timeDelta;
+    }
   }
 
   initWater() {
@@ -197,7 +235,7 @@ class NatureManager {
     this.water.position.y = nature.cache.earth.box.max.y + .5;
   }
 
-  initGround(chunks = 13) {
+  initGround(chunks = 15) {
     // get vox
     let vox = load_manager.get_vox('ground');
 
@@ -223,7 +261,10 @@ class NatureManager {
       } else {
         // first
         chunk.position.z = 15;
-        this.cache.ground.box = new THREE.Box3().setFromObject(chunk);
+
+        if(!this.cache.ground.box) {
+          this.cache.ground.box = new THREE.Box3().setFromObject(chunk);
+        }
       }
 
       // push chunk to pool
@@ -232,16 +273,18 @@ class NatureManager {
       // spawn chunk
       scene.add(chunk);
     }
+
+    // set leader
+    this.ground_chunks.leader = this.ground_chunks.length - 1;
   }
 
   moveGround(timeDelta) {
     for(let i = 0; i < this.ground_chunks.length; i++) {
       if(this.ground_chunks[i].position.z > this.config.remove_z.ground) {
         // re move
-        let chunk = this.ground_chunks.splice(i, 1)[0];
-        let lChunk = this.ground_chunks[this.ground_chunks.length-1];
-        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - (10 * lChunk.scale.z);
-        this.ground_chunks.push(chunk);
+        let lChunk = this.ground_chunks[this.ground_chunks.leader];
+        this.ground_chunks[i].position.z = lChunk.position.z - (10 * lChunk.scale.z);
+        this.ground_chunks.leader = i;
       }
 
       // move
@@ -297,6 +340,9 @@ class NatureManager {
       scene.add(chunk);
     }
 
+    // set pool leader
+    pool.leader = pool.length - 1;
+
     // pull pool to chunks pool
     this.ground_chunks_decoration.push(pool);
 
@@ -321,10 +367,9 @@ class NatureManager {
         // chunks
         if(this.ground_chunks_decoration[i][j].position.z > this.config.remove_z.ground) {
           // re move
-          let chunk = this.ground_chunks_decoration[i].splice(j, 1)[0];
-          let lChunk = this.ground_chunks_decoration[i][this.ground_chunks_decoration[i].length-1];
-          chunk.position.z = lChunk.position.z - (10 * lChunk.scale.z);
-          this.ground_chunks_decoration[i].push(chunk);
+          let lChunk = this.ground_chunks_decoration[i][this.ground_chunks_decoration[i].leader];
+          this.ground_chunks_decoration[i][j].position.z = lChunk.position.z - (10 * lChunk.scale.z);
+          this.ground_chunks_decoration[i].leader = j;
         }
 
         // move
@@ -620,6 +665,7 @@ class NatureManager {
   }
 
   update(timeDelta) {
+    this.moveEarth(timeDelta);
     this.moveGround(timeDelta);
     this.moveGroundDecoration(timeDelta);
 

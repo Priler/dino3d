@@ -26,6 +26,9 @@ let nature = new NatureManager();
 let load_manager = new LoadManager(); // start loading assets ASAP
 //= assets.js
 
+//= effects_manager.js
+let effects = new EffectsManager();
+
 //= game_manager.js
 //= interface_manager.js
 let game = new GameManager(new InterfaceManager());

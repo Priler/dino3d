@@ -922,13 +922,24 @@ camera.position.x = 7.37041093612718;
 camera.position.y = 3.428590611619372;
 camera.position.z = 22.609984741761778;
 
-camera.rotation.x = -0.39014130856676893;
-camera.rotation.y = 0.5429734306534122;
-camera.rotation.z = 0.20935752392633314;
+camera.rotation.x = -0.2521795322818087;
+camera.rotation.y = 0.5626175577081858;
+camera.rotation.z = 0.1365832725087437;
 
 if(config.camera.controls) {
 	controls.target.set(-1.2946982583264495, -3.0793822864709634e-18, 9.30358864783445);
 	controls.update();
+}
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
 }
 /**
  * Light stuff.
@@ -950,6 +961,7 @@ DLight.shadow.radius = 1;
  @TODO
  Shadows lower than 2K triggers twitches/flickers on moving objects.
  Better fix this later;
+ Maybe with CSM shadows?
  */
 DLight.shadow.mapSize.width = 1024 * 3;
 DLight.shadow.mapSize.height = 1024 * 3;
@@ -1331,7 +1343,8 @@ class NatureManager {
   constructor() {
     this.config = {
       "remove_z": {
-        "ground": 50
+        "ground": 50,
+        "earth": 250
       },
       "levels": {
         "playground": {
@@ -1453,7 +1466,8 @@ class NatureManager {
       "earth": {
         "box": null,
         "geometry": null,
-        "material": null
+        "material": null,
+        "texture": null
       },
       "ground": {
         "box": null,
@@ -1484,24 +1498,60 @@ class NatureManager {
     };
   }
 
-  initEarth() {
+  initEarth(chunks = 3) {
     // earth
     if(!this.cache.earth.geometry) {
+
+      this.cache.earth.texture = load_manager.get_texture('t_ground').top;
+      this.cache.earth.texture.wrapS = this.cache.earth.texture.wrapT = THREE.RepeatWrapping;
+      this.cache.earth.texture.offset.set( 0, 0 );
+      this.cache.earth.texture.repeat.set( 100 / 8, 250 / 16 );
+
       this.cache.earth.geometry = new THREE.BoxGeometry( 100, 0, 250 );
-      this.cache.earth.material = new THREE.MeshLambertMaterial( {color: 0xEFBC5C} ); // 0xD6B161
+      this.cache.earth.material = new THREE.MeshLambertMaterial( {map: this.cache.earth.texture} ); // 0xD6B161
     }
 
-    // zero level
-    this.earth = new THREE.Mesh(this.cache.earth.geometry, this.cache.earth.material);
-    this.earth.receiveShadow = true;
+    for(let i = 0; i < chunks; i++) {
+      let chunk = new THREE.Mesh(this.cache.earth.geometry, this.cache.earth.material);
+      chunk.receiveShadow = true;
 
-    this.earth.position.x = 0;
-    this.earth.position.y = nature.cache.ground.box.min.y - .5;
-    this.earth.position.z = -20;
+      chunk.position.x = 0;
+      chunk.position.y = nature.cache.ground.box.min.y - .5;
 
-    this.cache.earth.box = new THREE.Box3().setFromObject(this.earth);
+      if(i > 0) {
+        // reposition
+        let lChunk = this.earth_chunks[this.earth_chunks.length-1];
+        chunk.position.z = this.earth_chunks[this.earth_chunks.length-1].position.z - (250 * lChunk.scale.z);
+      } else {
+        // first
+        chunk.position.z = -20;
+      }
 
-    scene.add( this.earth );
+      if(!this.cache.earth.box) {
+        this.cache.earth.box = new THREE.Box3().setFromObject(chunk);
+      }
+
+      this.earth_chunks.push(chunk)
+
+      scene.add( chunk );
+    }
+
+    // set leader
+    this.earth_chunks.leader = this.earth_chunks.length - 1;
+  }
+
+  moveEarth(timeDelta) {
+    for(let i = 0; i < this.earth_chunks.length; i++) {
+      if(this.earth_chunks[i].position.z > this.config.remove_z.earth) {
+        // re move
+        let lChunk = this.earth_chunks[this.earth_chunks.leader];
+        this.earth_chunks[i].position.z = lChunk.position.z - (250 * lChunk.scale.z);
+        this.earth_chunks.leader = i;
+      }
+
+      // move
+      this.earth_chunks[i].position.z += enemy.config.vel * timeDelta;
+    }
   }
 
   initWater() {
@@ -1519,7 +1569,7 @@ class NatureManager {
     this.water.position.y = nature.cache.earth.box.max.y + .5;
   }
 
-  initGround(chunks = 13) {
+  initGround(chunks = 15) {
     // get vox
     let vox = load_manager.get_vox('ground');
 
@@ -1545,7 +1595,10 @@ class NatureManager {
       } else {
         // first
         chunk.position.z = 15;
-        this.cache.ground.box = new THREE.Box3().setFromObject(chunk);
+
+        if(!this.cache.ground.box) {
+          this.cache.ground.box = new THREE.Box3().setFromObject(chunk);
+        }
       }
 
       // push chunk to pool
@@ -1554,16 +1607,18 @@ class NatureManager {
       // spawn chunk
       scene.add(chunk);
     }
+
+    // set leader
+    this.ground_chunks.leader = this.ground_chunks.length - 1;
   }
 
   moveGround(timeDelta) {
     for(let i = 0; i < this.ground_chunks.length; i++) {
       if(this.ground_chunks[i].position.z > this.config.remove_z.ground) {
         // re move
-        let chunk = this.ground_chunks.splice(i, 1)[0];
-        let lChunk = this.ground_chunks[this.ground_chunks.length-1];
-        chunk.position.z = this.ground_chunks[this.ground_chunks.length-1].position.z - (10 * lChunk.scale.z);
-        this.ground_chunks.push(chunk);
+        let lChunk = this.ground_chunks[this.ground_chunks.leader];
+        this.ground_chunks[i].position.z = lChunk.position.z - (10 * lChunk.scale.z);
+        this.ground_chunks.leader = i;
       }
 
       // move
@@ -1619,6 +1674,9 @@ class NatureManager {
       scene.add(chunk);
     }
 
+    // set pool leader
+    pool.leader = pool.length - 1;
+
     // pull pool to chunks pool
     this.ground_chunks_decoration.push(pool);
 
@@ -1643,10 +1701,9 @@ class NatureManager {
         // chunks
         if(this.ground_chunks_decoration[i][j].position.z > this.config.remove_z.ground) {
           // re move
-          let chunk = this.ground_chunks_decoration[i].splice(j, 1)[0];
-          let lChunk = this.ground_chunks_decoration[i][this.ground_chunks_decoration[i].length-1];
-          chunk.position.z = lChunk.position.z - (10 * lChunk.scale.z);
-          this.ground_chunks_decoration[i].push(chunk);
+          let lChunk = this.ground_chunks_decoration[i][this.ground_chunks_decoration[i].leader];
+          this.ground_chunks_decoration[i][j].position.z = lChunk.position.z - (10 * lChunk.scale.z);
+          this.ground_chunks_decoration[i].leader = j;
         }
 
         // move
@@ -1942,6 +1999,7 @@ class NatureManager {
   }
 
   update(timeDelta) {
+    this.moveEarth(timeDelta);
     this.moveGround(timeDelta);
     this.moveGroundDecoration(timeDelta);
 
@@ -2458,6 +2516,113 @@ load_manager.set_loader('misc', ['ground'], function() {
   }
 });
 
+load_manager.set_loader('t_ground', [], function() {
+	let loader = new THREE.TextureLoader();
+	let textures = {
+		"top": null
+	};
+	let loaded_textures = 0;
+
+	loader.load(config.base_path + 'textures/ground_top.png', function ( texture ) {
+		texture.magFilter = THREE.NearestFilter;
+
+		texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+		texture.offset.set( 0, 0 );
+		texture.repeat.set( 2, 1 );
+
+		textures.top = texture;
+
+		load_manager.set_texture('t_ground', textures);
+	    load_manager.set_status('t_ground', true);
+	});
+});
+
+/**
+ * Effects class.
+ * Rain, day/night, etc.
+ * @type {EffectsManager}
+ */
+
+class EffectsManager {
+    constructor() {
+
+      // day/night circle
+      this.daytime = {
+        "is_day": true,
+        "duration": {
+          "day": 60, // seconds
+          "night": 15 // night
+        },
+        "intensity": {
+          "day": {
+            "ambient": ALight.intensity,
+            "direct": DLight.intensity
+          },
+          "night": {
+            "ambient": 0,
+            "direct": .2
+          }
+        },
+        "fog": {
+          "day": {
+            "color": 0xE7B251
+          },
+          "night": {
+            "color": 0x3E668D
+          }
+        },
+        "background": {
+          "day": {
+            "color": 0xE7B251
+          },
+          "night": {
+            "color": 0x3E668D
+          }
+        },
+        "clock": new THREE.Clock()
+      }
+
+    }
+
+    reset() {
+      this.daytime.is_day = true;
+      this.daytime.clock.elapsedTime = 0;
+    }
+
+    update(timeDelta) {
+      if(this.daytime.is_day) {
+        // day
+        if(this.daytime.clock.getElapsedTime() > this.daytime.duration.day) {
+          // turn to night
+          ALight.intensity = this.daytime.intensity.night.ambient;
+          DLight.intensity = this.daytime.intensity.night.direct;
+
+          scene.background.setHex(this.daytime.background.night.color)
+          scene.fog.color.setHex(this.daytime.fog.night.color);
+
+          this.daytime.clock.elapsedTime = 0;
+          this.daytime.is_day = false;
+        }
+      } else {
+        // night
+        if(this.daytime.clock.getElapsedTime() > this.daytime.duration.night) {
+          // turn to day
+          ALight.intensity = this.daytime.intensity.day.ambient;
+          DLight.intensity = this.daytime.intensity.day.direct;
+
+          scene.background.setHex(this.daytime.background.day.color)
+          scene.fog.color.setHex(this.daytime.fog.day.color);
+
+          this.daytime.clock.elapsedTime = 0;
+          this.daytime.is_day = true;
+        }
+      }
+
+      
+    }
+  }
+let effects = new EffectsManager();
+
 /**
  * GameManager class.
  *
@@ -2577,21 +2742,21 @@ class GameManager {
         nature.ground_chunks_decoration_levels["water"] = {
           "x": -9,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
         // water level additional
         nature.ground_chunks_decoration_levels["water2"] = {
           "x": -9,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
         // water level additional
         nature.ground_chunks_decoration_levels["empty"] = {
           "x": 7,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
 
@@ -2694,6 +2859,7 @@ class GameManager {
         nature.reset();
         score.reset();
         player.reset();
+        effects.reset();
 
         // redraw to remove objects from scene
         this.render();
@@ -2722,6 +2888,7 @@ class GameManager {
         enemy.update(timeDelta);
         nature.update(timeDelta);
         input.update();
+        effects.update(timeDelta);
         nebulaSystem.update();
 
         if(config.renderer.postprocessing.enable) {

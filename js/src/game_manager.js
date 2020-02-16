@@ -117,21 +117,21 @@ class GameManager {
         nature.ground_chunks_decoration_levels["water"] = {
           "x": -9,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
         // water level additional
         nature.ground_chunks_decoration_levels["water2"] = {
           "x": -9,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
         // water level additional
         nature.ground_chunks_decoration_levels["empty"] = {
           "x": 7,
           "y": nature.cache.earth.box.max.y,
-          "box": new THREE.Box3().setFromObject(nature.earth)
+          "box": nature.cache.earth.box
         };
 
 
@@ -234,6 +234,7 @@ class GameManager {
         nature.reset();
         score.reset();
         player.reset();
+        effects.reset();
 
         // redraw to remove objects from scene
         this.render();
@@ -262,6 +263,7 @@ class GameManager {
         enemy.update(timeDelta);
         nature.update(timeDelta);
         input.update();
+        effects.update(timeDelta);
         nebulaSystem.update();
 
         if(config.renderer.postprocessing.enable) {

@@ -13,3 +13,5 @@
 //= geometry/rocks.js
 //= geometry/flowers.js
 //= geometry/misc.js
+
+//= textures/ground.js

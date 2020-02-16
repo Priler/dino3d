@@ -18,6 +18,7 @@ DLight.shadow.radius = 1;
  @TODO
  Shadows lower than 2K triggers twitches/flickers on moving objects.
  Better fix this later;
+ Maybe with CSM shadows?
  */
 DLight.shadow.mapSize.width = 1024 * 3;
 DLight.shadow.mapSize.height = 1024 * 3;
