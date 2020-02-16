@@ -10,7 +10,7 @@ const config = {
 		"fov": 45,
 		"aspect": window.innerWidth/window.innerHeight,
 		"near": 0.1,
-		"far": 150,
+		"far": 200,
 		"controls": false,
 		"helper": false
 	},

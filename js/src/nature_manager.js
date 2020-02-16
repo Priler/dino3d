@@ -634,30 +634,36 @@ class NatureManager {
   }
 
   reset() {
+    // remove misc
     for(let l in this.config.levels) {
       for(let i = 0; i < this.misc[l].length; i++) {
         scene.remove(this.misc[l][i]);
       }
     }
 
+    // remove earth chunks
     for(let i = 0; i < this.earth_chunks.length; i++) {
       scene.remove(this.earth_chunks[i]);
     }
 
+    // remove ground chunks
     for(let i = 0; i < this.ground_chunks.length; i++) {
       scene.remove(this.ground_chunks[i]);
     }
 
+    // remove all ground chunks decoration
     for(let i = 0; i < this.ground_chunks_decoration.length; i++) {
       for(let j = 0; j < this.ground_chunks_decoration[i].length; j++) {
         scene.remove(this.ground_chunks_decoration[i][j]);
       }
     }
 
+    // remove water
     scene.remove(this.water);
 
+    // clear arrays
     this.misc = [];
-    this.earth = null;
+    this.earth_chunks = [];
     this.ground_chunks = [];
     this.ground_chunks_decoration = [];
     this.ground_chunks_decoration_levels = [];
