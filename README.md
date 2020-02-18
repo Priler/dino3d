@@ -52,7 +52,7 @@ https://github.com/addyosmani/visibly.js/ - Page Visibility API shim
 
 ## Author
 
-(C) 2020 Abraham Tugalov.
+(C) 2020 Abdurahmon Tugalov.
 http://howdyho.net
 
 ## Contributors
