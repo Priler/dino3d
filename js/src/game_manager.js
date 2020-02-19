@@ -280,13 +280,17 @@ class GameManager {
     tabVisibilityChanged(state) {
         if(state == 'visible') {
             // resume
+            logs.log('GAME RESUME');
             if(game.isPaused) {
                 game.resume();
+                effects.resume();
             }
         } else {
             // pause
+            logs.log('GAME PAUSE');
             if(game.isPlaying) {
                 game.pause();
+                effects.pause();
             }
         }
     }

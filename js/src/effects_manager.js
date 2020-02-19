@@ -53,6 +53,9 @@ class EffectsManager {
         "clock": new THREE.Clock()
       }
 
+      if(!config.renderer.effects) {
+        this.update = function() {};
+      }
     }
 
     changeDaytime(daytime = 'day') {
@@ -62,6 +65,9 @@ class EffectsManager {
       this.daytime.clock.stop();
       this.daytime.clock.elapsedTime = 0;
       this.daytime.clock.start();
+
+      // reset values
+      this.stepTransition(!this.daytime.is_day, 1, 1);
     }
 
     stepTransition(darken = true, step, total) {
@@ -69,22 +75,46 @@ class EffectsManager {
 
       if(darken) {
         // to night
-        ALight.intensity = parseFloat((ALight.intensity - (this.daytime.intensity.day.ambient - this.daytime.intensity.night.ambient) * inc).toFixed(5));
-        DLight.intensity = parseFloat((DLight.intensity - (this.daytime.intensity.day.direct - this.daytime.intensity.night.direct) * inc).toFixed(5));
+        if(inc === 1) {
+          // set
+          ALight.intensity = this.daytime.intensity.night.ambient;
+          DLight.intensity = this.daytime.intensity.night.direct;
 
-        scene.fog.color.sub(this.daytime.fog.diff_cache);
-        scene.background.sub(this.daytime.background.diff_cache);
+          scene.fog.color.setRGB(this.daytime.fog.night.color[0], this.daytime.fog.night.color[1], this.daytime.fog.night.color[2]);
+          scene.background.setRGB(this.daytime.background.night.color[0], this.daytime.background.night.color[1], this.daytime.background.night.color[2]);
+        
+          DLight.shadow.radius = this.daytime.intensity.night.shadow_radius;
+        } else {
+          // step
+          ALight.intensity = parseFloat((ALight.intensity - (this.daytime.intensity.day.ambient - this.daytime.intensity.night.ambient) * inc).toFixed(5));
+          DLight.intensity = parseFloat((DLight.intensity - (this.daytime.intensity.day.direct - this.daytime.intensity.night.direct) * inc).toFixed(5));
 
-        DLight.shadow.radius = parseFloat((DLight.shadow.radius - (this.daytime.intensity.night.shadow_radius - this.daytime.intensity.day.shadow_radius) * inc).toFixed(5));
+          scene.fog.color.sub(this.daytime.fog.diff_cache);
+          scene.background.sub(this.daytime.background.diff_cache);
+
+          DLight.shadow.radius = parseFloat((DLight.shadow.radius - (this.daytime.intensity.night.shadow_radius - this.daytime.intensity.day.shadow_radius) * inc).toFixed(5));
+        }
       } else {
         // to day
-        ALight.intensity = parseFloat((ALight.intensity + (this.daytime.intensity.day.ambient - this.daytime.intensity.night.ambient) * inc).toFixed(5));
-        DLight.intensity = parseFloat((DLight.intensity + (this.daytime.intensity.day.direct - this.daytime.intensity.night.direct) * inc).toFixed(5));
+        if(inc === 1) {
+          // set
+          ALight.intensity = this.daytime.intensity.day.ambient;
+          DLight.intensity = this.daytime.intensity.day.direct;
 
-        scene.fog.color.add(this.daytime.fog.diff_cache);
-        scene.background.add(this.daytime.background.diff_cache);
-      
-        DLight.shadow.radius = parseFloat((DLight.shadow.radius + (this.daytime.intensity.night.shadow_radius - this.daytime.intensity.day.shadow_radius) * inc).toFixed(5));
+          scene.fog.color.setRGB(this.daytime.fog.day.color[0], this.daytime.fog.day.color[1], this.daytime.fog.day.color[2]);
+          scene.background.setRGB(this.daytime.background.day.color[0], this.daytime.background.day.color[1], this.daytime.background.day.color[2]);
+        
+          DLight.shadow.radius = this.daytime.intensity.day.shadow_radius;
+        } else {
+          // inc
+          ALight.intensity = parseFloat((ALight.intensity + (this.daytime.intensity.day.ambient - this.daytime.intensity.night.ambient) * inc).toFixed(5));
+          DLight.intensity = parseFloat((DLight.intensity + (this.daytime.intensity.day.direct - this.daytime.intensity.night.direct) * inc).toFixed(5));
+
+          scene.fog.color.add(this.daytime.fog.diff_cache);
+          scene.background.add(this.daytime.background.diff_cache);
+        
+          DLight.shadow.radius = parseFloat((DLight.shadow.radius + (this.daytime.intensity.night.shadow_radius - this.daytime.intensity.day.shadow_radius) * inc).toFixed(5));
+        }
       }
 
       this.daytime.transition.steps_done = parseFloat((this.daytime.transition.steps_done + step).toFixed(5));
@@ -95,7 +125,9 @@ class EffectsManager {
 
       this.daytime.transition.active = true; // begin transition
       this.daytime.transition.clock.elapsedTime = 0;
-      this.daytime.transition['steps_done'] = 0;
+      this.daytime.transition.clock.start();
+      this.daytime.transition.steps_done = 0;
+
 
       // cache sub & add colors
       this.daytime.fog.diff_cache = new THREE.Color();
@@ -115,14 +147,34 @@ class EffectsManager {
 
     stopTransition() {
       this.daytime.transition.active = false; // end transition
+      this.daytime.transition.clock.stop();
       this.daytime.transition.clock.elapsedTime = 0;
+      this.daytime.transition.steps_done = 0;
     }
 
     reset() {
+      this.stopTransition();
       this.changeDaytime('day');
+    }
+
+    pause() {
+      this.pause_time = this.daytime.clock.getElapsedTime();
       this.daytime.clock.stop();
-      this.daytime.clock.elapsedTime = 0;
+
+      if( this.daytime.transition.active ) {
+        this.pause_transition_time = this.daytime.transition.clock.getElapsedTime();
+        this.daytime.transition.clock.stop();
+      }
+    }
+
+    resume() {
       this.daytime.clock.start();
+      this.daytime.clock.elapsedTime = this.pause_time;
+
+      if( this.daytime.transition.active ) {
+        this.daytime.transition.clock.start();
+        this.daytime.transition.clock.elapsedTime = this.pause_transition_time;
+      }
     }
 
     update(timeDelta) {

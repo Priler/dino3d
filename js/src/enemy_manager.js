@@ -28,7 +28,8 @@ class EnemyPool {
 		}
 
 		let i = Math.floor(Math.random() * this.keys.length);
-		return this.keys.splice(i, 1)[0];
+		let k = this.keys.splice(i, 1)[0];
+		return k;
 	}
 
 	returnKey(k) {
@@ -96,6 +97,10 @@ class EnemyManager {
 		}
 	}
 
+	hasDuplicates(array) {
+	    return (new Set(array)).size !== array.length;
+	}
+
 	async init() {
 		// set cache
 		this.cache.cactus = {
@@ -128,6 +133,10 @@ class EnemyManager {
 			this.cache[type].geometry[rand],
 			this.cache[type].material[rand]
 		);
+
+		// xbox
+		// mesh.xbox = new THREE.BoxHelper( mesh, 0xffff00 );
+		// scene.add(mesh.xbox);
 
 		// basic mesh setup
 		mesh.enemy_type = type;
@@ -265,7 +274,7 @@ class EnemyManager {
 		// identify key
 		let key = null;
 
-		if(k) {
+		if(k !== false) {
 			// key = this.buffer.splice(this.buffer.indexOf(k), 1)[0];
 			key = this.buffer[this.buffer.indexOf(k)];
 		} else {
@@ -275,6 +284,7 @@ class EnemyManager {
 
 		// hide mesh
 		let enemiesGroup = this.pool.getItem(key);
+
 		for(let e = 0; e < enemiesGroup.length; e++ ) {
 			enemiesGroup[e].position.z = this.config.remove_z * 2;
 			enemiesGroup[e].visible = false;
@@ -285,13 +295,16 @@ class EnemyManager {
 	}
 
 	move(timeDelta) {
+		// now do the check
 		for(let i = 0; i < this.buffer.length; i++) {
 			let e = this.pool.getItem(this.buffer[i]);
 
-			// despawn, if required
+			// respawn, if required
 			if(e[0].position.z > this.config.remove_z) {
+				let newEnemy = this.spawn();
 				this.despawn(this.buffer[i]);
-				this.buffer[i] = this.spawn(); // just replace the key
+				this.buffer[i] = newEnemy; // just replace the key
+
 				continue;
 			}
 
@@ -309,11 +322,14 @@ class EnemyManager {
 					e[j].position.z += this.config.vel * timeDelta;
 				}
 
+				// xbox
+				// e[j].xbox.update();
+
 				/**
 				 * @TODO
 				 * Optimization can be done.
 				 */
-				if(this.config.enable_collisions && e[j].visible) {
+				if(this.config.enable_collisions) {
 					// check collision with player
 					let eBox = this.box3 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 					eBox.setFromObject(e[j]);
@@ -321,7 +337,7 @@ class EnemyManager {
 					let pBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 					pBox.setFromObject(player.collisionBox);
 
-					if(eBox.intersectsBox(pBox)) {
+					if(eBox.intersectsBox(pBox) && e[j].visible) {
 						game.stop();
 						return;
 					}

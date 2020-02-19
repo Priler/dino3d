@@ -28,6 +28,7 @@ const config = {
 		"shadows_type": THREE.PCFSoftShadowMap,
 		"fog": true, // show fog?
 		"toneMapping": true, // enable tone mapping (Uncharted2)?
+		"effects": true, // daytime, rain, etc
 		"postprocessing": {
 			"enable": false, // enable postprocessing?
 			"sao": false, // Scaling Ambient Occlusion
