@@ -89,6 +89,8 @@
 
       addKey(81, 'debug_speedup'); // q
 
+		//keyboard
+
       window.addEventListener('keydown', (e) => {
         // console.log(e.keyCode);
         setKeyFromKeyCode(e.keyCode, true);
@@ -96,6 +98,32 @@
  
       window.addEventListener('keyup', (e) => {
         setKeyFromKeyCode(e.keyCode, false);
+      });
+
+      //mouse
+
+      window.addEventListener('mousedown', (e) => {
+        // console.log(e.keyCode);
+        if (e.pageY < document.documentElement.clientHeight/2) setKey('space', true);
+        else setKey('down', true);
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        setKey('space', false);
+        setKey('down', false);
+      });
+
+      //touchscreen
+
+      window.addEventListener('touchstart', (e) => {
+        // console.log(e.keyCode);
+        if (e.touches[0].pageY < document.documentElement.clientHeight/2) setKey('space', true);
+        else setKey('down', true);
+      });
+
+	  window.addEventListener('touchend', (e) => {
+        setKey('space', false);
+        setKey('down', false);
       });
     }
 
@@ -114,6 +142,7 @@
       }
     }
   }
+document.oncontextmenu = function (){return false};
 /**
  * Audio class.
  * @type {AudioManager}
