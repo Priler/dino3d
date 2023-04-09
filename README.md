@@ -1,6 +1,6 @@
 # 🦖 T-Rex Run 3D
-Play the game here: http://priler.github.io/dino3d/low.html  
-Alt. version with best quality settings for high-end PCs: http://priler.github.io/dino3d/
+Play the game here: https://misheus.github.io/dino3d/low.html  
+Alt. version with best quality settings for high-end PCs: https://misheus.github.io/dino3d/
 
 # Description
 T-Rex Run 3D is a ThreeJS WebGL game made as an experiment.  
