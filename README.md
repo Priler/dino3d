@@ -15,6 +15,11 @@ Run server
 npx http-server
 ```
 
+# Recommended tools
+
+- [VOX Viewer for VSCode](https://marketplace.visualstudio.com/items?itemName=Tovi.vscode-vox) - VSCode extension for previewing MagicaVoxel models (.vox files)
+- [MagicaVoxel](https://ephtracy.github.io/) - Free lightweight 8-bit voxel art editor
+
 # Description
 T-Rex Run 3D is a ThreeJS WebGL game made as an experiment.  
 All the graphics was hand crafted with Magica Voxel software, so that the overall feel and look of the game will be the same as original 2D game.

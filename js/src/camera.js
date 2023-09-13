@@ -38,9 +38,9 @@ camera.rotation.z = 0.1365832725087437;
 
 camera.position.x = 0;
 camera.position.y = 3.0;
-camera.position.z = 19.5;
+camera.position.z = 20;
 
-camera.rotation.x = -0.45;
+camera.rotation.x = -0.40;
 camera.rotation.y = 0;
 camera.rotation.z = 0;
 

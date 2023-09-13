@@ -934,6 +934,7 @@ if(config.camera.controls) {
 // camera.rotation.y = 0.584284504225838;
 // camera.rotation.z = 0.2733367087027698;
 
+/*
 camera.position.x = 7.37041093612718;
 camera.position.y = 3.428590611619372;
 camera.position.z = 22.609984741761778;
@@ -941,6 +942,15 @@ camera.position.z = 22.609984741761778;
 camera.rotation.x = -0.2521795322818087;
 camera.rotation.y = 0.5626175577081858;
 camera.rotation.z = 0.1365832725087437;
+*/
+
+camera.position.x = 0;
+camera.position.y = 3.0;
+camera.position.z = 20;
+
+camera.rotation.x = -0.40;
+camera.rotation.y = 0;
+camera.rotation.z = 0;
 
 if(config.camera.controls) {
 	controls.target.set(-1.2946982583264495, -3.0793822864709634e-18, 9.30358864783445);
