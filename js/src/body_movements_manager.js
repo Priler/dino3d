@@ -10,6 +10,7 @@ class BodyMovementsManager {
     this.detector = null;
     this.webcam = null;
     this.state = Pose.NORMAL;
+    this.prevPose = null;
     this.init();
   }
 
@@ -38,7 +39,7 @@ class BodyMovementsManager {
   }
 
   getKeypoint(pose, keypointName) {
-    if(pose.keypoints){
+    if(pose && pose.keypoints){
       return pose.keypoints.find(keypoint => keypoint.name === keypointName);
     }
   }
@@ -61,13 +62,18 @@ class BodyMovementsManager {
     return left && right;
   }
 
-  isJumping(prevPose, currentPose) {
-    if (!this.pointsExist(prevPose, ['left_ankle'])) return;
-    if (!this.pointsExist(currentPose, ['left_ankle'])) return;
-    const prevAnkleY = prevPose.keypoints.find(keypoint => keypoint.name === 'left_ankle').y;
-    const currentAnkleY = currentPose.keypoints.find(keypoint => keypoint.name === 'left_ankle').y;
-    const jumpThreshold = 10; // Adjust this threshold as needed
-    return (currentAnkleY - prevAnkleY) > jumpThreshold;
+  isJumping(currentPose) {
+    console.log("CURRENT POSE", currentPose);
+    if(!this.prevPose) return false;
+    console.log("PREV POSE", this.prevPose);
+    const prevAnkleLeft = this.getKeypoint(this.prevPose, "left_ankle");
+    const prevAnkleRight = this.getKeypoint(this.prevPose, "right_ankle");
+    const currentAnkleLeft = this.getKeypoint(currentPose, "left_ankle");
+    const currentAnkleRight = this.getKeypoint(currentPose, "right_ankle");
+    const variation = 5; 
+    console.log("LEFT ANKLE", prevAnkleLeft.y, currentAnkleLeft.y);
+    console.log("RIGHT ANKLE", prevAnkleRight.y, currentAnkleRight.y);
+    return (prevAnkleLeft.y - currentAnkleLeft.y) > variation && (prevAnkleRight.y - currentAnkleRight.y) > variation;
   }
 
   update() {
@@ -75,28 +81,31 @@ class BodyMovementsManager {
     if (this.detector) {
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
-        if (this.prevPose && pose.keypoints) {
-          pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
+        if(!pose.keypoints) return;
+        //pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
 
-          //const jumpDetected = this.isJumping(this.prevPose, pose);
-          //if (jumpDetected) {
-          //  console.log('Jump detected!');
-//
-          //  input.setKey('space', true);
-//
-          //}
-          if (this.isCrouching(pose) && this.state == Pose.NORMAL) {
-            this.state = Pose.CROUCHING;
-            input.setKey('down', true);
-          }
-          if(!this.isCrouching(pose) && this.state == Pose.CROUCHING){
-            this.state = Pose.NORMAL;
-            input.setKey('down', false);
-          }
+        // Check if jumping
+        if (this.isJumping(pose) && this.state == Pose.NORMAL) {
+          this.state = Pose.JUMPING;
+          input.setKey('space', true);
         }
+        if(!this.isJumping(pose) && this.state == Pose.JUMPING){
+          this.state = Pose.NORMAL;
+          input.setKey('space', false);
+        }
+
+        // Check if crouching
+        if (this.isCrouching(pose) && this.state == Pose.NORMAL) {
+          this.state = Pose.CROUCHING;
+          input.setKey('down', true);
+        }
+        if(!this.isCrouching(pose) && this.state == Pose.CROUCHING){
+          this.state = Pose.NORMAL;
+          input.setKey('down', false);
+        }
+
+
         this.prevPose = pose;
-        // Continue updating poses
-        //requestAnimationFrame(() => this.update());
       });
     }
   }
