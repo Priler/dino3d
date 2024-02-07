@@ -19,6 +19,7 @@ const camera = new THREE.PerspectiveCamera(
 const clock = new THREE.Clock();
 
 let input = new InputManager();
+let webcam_input = new BodyMovementsManager();
 let audio = new AudioManager();
 let enemy = new EnemyManager();
 let score = new ScoreManager();

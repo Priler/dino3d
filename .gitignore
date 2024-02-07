@@ -8,3 +8,4 @@ package-lock.json
 bot/
 debug.html
 js/config-debug.js
+.DS_Store

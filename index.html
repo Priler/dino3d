@@ -14,6 +14,7 @@
 
 </head>
 <body>
+	<video id="webcam" autoplay></video>
 	<div id="preloader">
 		<div class="progress">
 	        <div class="chart">
@@ -56,6 +57,14 @@
 		<h1>GAME OVER</h1>
 		<img src="media/repeat.png">
 	</div>
+
+	<!-- Require the peer dependencies of pose-detection. -->
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+	<!-- You must explicitly require a TF.js backend if you're not using the TF.js union bundle. -->
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+	<!-- Alternatively you can use the WASM backend: <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script> -->
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 
 	<script src="libs/three/three.min.js"></script>
 	<script src="libs/three/controls/OrbitControls.js"></script>

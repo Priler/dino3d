@@ -19,7 +19,7 @@
       this.callbacks_i = 0;
       const keyMap = new Map();
 
-      const setKey = (keyName, pressed) => {
+      this.setKey = (keyName, pressed) => {
         const keyState = this.keys[keyName];
         keyState.justPressed = pressed && !keyState.down;
         keyState.down = pressed;
@@ -53,7 +53,7 @@
         if (!keyName) {
           return;
         }
-        setKey(keyName, pressed);
+        this.setKey(keyName, pressed);
       };
 
       this.addKeyCallback = (keyName, actionType, callback, calls = false) => {
@@ -87,6 +87,7 @@
 
       addKey(81, 'debug_speedup'); // q
 
+      // Keyboard events
       window.addEventListener('keydown', (e) => {
         // console.log(e.keyCode);
         setKeyFromKeyCode(e.keyCode, true);
@@ -95,6 +96,8 @@
       window.addEventListener('keyup', (e) => {
         setKeyFromKeyCode(e.keyCode, false);
       });
+
+      //TODO: Camera body movements events
     }
 
     update() {
@@ -110,5 +113,6 @@
           keyState.justReleased = false;
         }
       }
+      webcam_input.update();
     }
   }

@@ -2,6 +2,7 @@
 
 //= input_manager.js
 //= audio_manager.js
+//= body_movements_manager.js
 //= enemy_manager.js
 //= score_manager.js
 //= init.js
