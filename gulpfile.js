@@ -1,7 +1,7 @@
 var
 	gulp			= require("gulp"),
 	livereload		= require("gulp-livereload"),
-	sass			= require("gulp-sass"),
+	sass			= require("gulp-sass")(require('sass')),
 	autoprefixer	= require("gulp-autoprefixer"),
 	cleancss		= require("gulp-clean-css"),
 	rename			= require("gulp-rename"),
