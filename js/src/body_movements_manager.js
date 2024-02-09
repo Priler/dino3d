@@ -87,6 +87,33 @@ class BodyMovementsManager {
     return (prevAnkleLeft.y - currentAnkleLeft.y) > variation && (prevAnkleRight.y - currentAnkleRight.y) > variation;
   }
 
+  isCalibrated(keypointNames) {
+    const pose = this.prevPose;
+    if(!pose) return false;
+
+    const threshold = 0.3;
+    // Verify if all keypoints have better score than threshold
+    const scoreCondition =  keypointNames.every(keypointName => {
+      const keypoint = this.getKeypoint(pose, keypointName);
+      return keypoint.score > threshold;
+    });
+    if(!scoreCondition){
+      return false;
+    }
+
+    // Verifiy if arms are straight;
+    // get min and max y of all keypoints~
+    const armKeypoints = ["left_shoulder", "right_shoulder", "left_wrist", "right_wrist", "left_elbow", "right_elbow"];
+    const keypoints = armKeypoints.map(keypointName => this.getKeypoint(pose, keypointName));
+    const minY = Math.min(...keypoints.map(keypoint => keypoint.y));
+    const maxY = Math.max(...keypoints.map(keypoint => keypoint.y));
+    const variation = 30;
+
+    const armsCondition = (maxY - minY) < variation;
+    return scoreCondition && armsCondition;
+  
+  }
+
   clearCanvas() {
     const ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -95,7 +122,6 @@ class BodyMovementsManager {
   drawKeypoints(pose, keypointsToDraw = null) {
     
     this.clearCanvas();
-    console.log("Drawing keypoints");
     
     const heightProportion = this.canvas.height / this.webcam.videoHeight;
     const widthProportion = this.canvas.width / this.webcam.videoWidth;
@@ -106,10 +132,8 @@ class BodyMovementsManager {
     }
 
     keypointsToDraw.forEach(keypointName => {
-      console.log("Trying to draw keypoint", keypointName)
       const kp = this.getKeypoint(pose, keypointName);
       if(!kp) return;
-      console.log("Drawing keypoint", kp.x, kp.y);
       ctx.beginPath();
       ctx.arc(kp.x * widthProportion, kp.y * heightProportion, 5, 0, 2 * Math.PI);
       ctx.fillStyle = 'green';
@@ -157,21 +181,13 @@ class BodyMovementsManager {
     }
   }
 
-  calibrationUpdate(calibration, keypointsToRead) {
+  calibrationUpdate(keypointsToRead) {
     if(this.detector){
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
-        if(!pose.keypoints) return;
+        if(!pose || !pose.keypoints) return;
         this.drawKeypoints(pose, keypointsToRead);
-        /*
-        this.keypointsRead = {};
-        keypointsToReadd.foreach(keypoint => {
-          if(!this.getKeypoint(pose, keypoint)){
-            console.log("Keypoint not found", keypoint);
-          }
-          this.keypointsRead[keypoint] = this.getKeypoint(pose, keypoint);
-        });  // Change this later
-        */
+        this.prevPose = pose;
       });
     }
     
@@ -185,10 +201,25 @@ class BodyMovementsManager {
 
     if(!leftAnkle || !rightAnkle) return;
 
+    
+    const leftBoundary = (this.webcam.videoWidth / 4);
+    const rightBoundary = 3 * this.webcam.videoWidth / 4 ;
+
+    const playableWidth = rightBoundary - leftBoundary;
+
     const middlePoint = (leftAnkle.x + rightAnkle.x) / 2;
 
-    const position = middlePoint / this.webcam.videoWidth;
+    const position =  (middlePoint - leftBoundary) / (playableWidth);
 
+
+    // left boundary = 250
+    // 500
+    // right boundary = 750
+    // maxwidth 1000
+    
+    // if is left moveToPosition = 0
+    // if middle  = 0.5
+    // if is right moveToPosition = 1
     player.moveToPosition = position; // TODO:: improve
     
 

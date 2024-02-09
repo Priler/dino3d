@@ -93,7 +93,7 @@ class GameManager {
     }
 
 	async start() {
-        if(this.state == State.PLAYING || this.state == State.CALIBRATION) {
+        if(this.state == State.PLAYING) {
             return false;
         }
 
@@ -277,7 +277,9 @@ class GameManager {
 
     gameCalibrationUpdate(timeDelta){
         calibration.update(timeDelta);
-
+        if(calibration.isCalibrated){
+            this.start();
+        }
         if(config.renderer.postprocessing.enable) {
             // postprocessing
             composer.render(timeDelta);
@@ -286,7 +288,7 @@ class GameManager {
             renderer.render( scene, camera );
         }
     }
-    playingUpdate(timedelta){
+    playingUpdate(timeDelta){
         if(config.camera.controls) {
             controls.update();}
 
