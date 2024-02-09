@@ -242,7 +242,7 @@
         const strafeVelocity = 20;
         const minPosition = -2.5;
         const maxPosition = 2.5;
-        console.log(this.moveToPosition);
+        //console.log(this.moveToPosition);
         const positionToGo = maxPosition - this.moveToPosition * (maxPosition - minPosition);
         this.frame.position.x = positionToGo;
         this.collisionBox.position.x = positionToGo;

@@ -25,7 +25,6 @@ class CalibrationManager {
                 if (this.timeLeft <= 0){
                     this.isCalibrated = true;
                 }
-                console.log(this.timeLeft);
             } else {
                 this.timeLeft = 0.5; // 2 seconds
             }

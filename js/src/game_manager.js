@@ -188,7 +188,7 @@ class GameManager {
 	}
 
     stop() {
-        if(!this.state == State.PLAYING) return false;
+        if(this.state !== State.PLAYING) return false;
         this.state = State.GAMEOVER;
 
 		// remove dust particles
@@ -212,22 +212,21 @@ class GameManager {
 
     pause() {
 
-        if(!this.state == State.PLAYING) return false;
+        if(this.state !== State.PLAYING) return false;
         
         this.state = State.PAUSED;
         audio.pause('bg');
     }
 
     resume() {
-        if(!this.state == State.PAUSED) return false;
+        if(this.state !== State.PAUSED) return false;
+        this.state = State.PLAYING;
         
-        this.state = State.PLAYING
         audio.resume('bg');
 
         clock.getDelta(); // drop delta
         this.render();
         this.loop();
-        this.state = State.PLAYING;
     }
 
     reset() {
@@ -243,17 +242,17 @@ class GameManager {
 
         // redraw to remove objects from scene
         this.render();
-        this.state = State.PLAYING;
     }
 
     restart() {
-        if(this.state == State.PLAYING) {
+        console.log("Restart");
+        if(this.state === State.PLAYING) {
             this.stop();
         }
         
         this.reset();
         this.start();
-        this.state = State.PLAYING;
+        //this.state = State.PLAYING;
     }
 
     render() {

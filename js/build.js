@@ -219,19 +219,15 @@ class BodyMovementsManager {
   init() {
     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       .then((stream) => {
-        console.log("Stream", stream)
         this.webcam = document.getElementById('webcam');
         this.webcam.srcObject = stream;
         //check when its loaded
         this.webcam.onloadedmetadata = () => {
           this.canvas = document.getElementById('canvas');
-          console.log(this.webcam.videoWidth)
-          console.log(this.webcam.videoHeight)
           const ratio = this.webcam.videoWidth / this.webcam.videoHeight;
           this.canvas.width = this.canvas.height * ratio;
         };
-        
-        
+
         console.log('WEBCAM INITIALIZED')
       })
       .catch((err) => {
@@ -252,6 +248,8 @@ class BodyMovementsManager {
   }
 
   getKeypoint(pose, keypointName) {
+    if(pose == undefined) return;
+    if(!pose.keypoints) return;
     if(pose && pose.keypoints){
       return pose.keypoints.find(keypoint => keypoint.name === keypointName);
     }
@@ -282,8 +280,6 @@ class BodyMovementsManager {
     const currentAnkleLeft = this.getKeypoint(currentPose, "left_ankle");
     const currentAnkleRight = this.getKeypoint(currentPose, "right_ankle");
     const variation = 5; 
-    //console.log("LEFT ANKLE", prevAnkleLeft.y, currentAnkleLeft.y);
-    //console.log("RIGHT ANKLE", prevAnkleRight.y, currentAnkleRight.y);
     return (prevAnkleLeft.y - currentAnkleLeft.y) > variation && (prevAnkleRight.y - currentAnkleRight.y) > variation;
   }
 
@@ -348,7 +344,7 @@ class BodyMovementsManager {
     if (this.detector) {
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
-        if(!pose.keypoints) return;
+        if(!pose || !pose.keypoints) return;
         
         //this.drawKeypoints(pose)
         //pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
@@ -1579,7 +1575,7 @@ if(config.logs) {
         const strafeVelocity = 20;
         const minPosition = -2.5;
         const maxPosition = 2.5;
-        console.log(this.moveToPosition);
+        //console.log(this.moveToPosition);
         const positionToGo = maxPosition - this.moveToPosition * (maxPosition - minPosition);
         this.frame.position.x = positionToGo;
         this.collisionBox.position.x = positionToGo;
@@ -2243,6 +2239,7 @@ class NatureManager {
   }
 
   reset() {
+    console.log("Removing Nature")
     // remove misc
     for(let l in this.config.levels) {
       for(let i = 0; i < this.misc[l].length; i++) {
@@ -2845,7 +2842,6 @@ class CalibrationManager {
                 if (this.timeLeft <= 0){
                     this.isCalibrated = true;
                 }
-                console.log(this.timeLeft);
             } else {
                 this.timeLeft = 0.5; // 2 seconds
             }
@@ -3271,7 +3267,7 @@ class GameManager {
 	}
 
     stop() {
-        if(!this.state == State.PLAYING) return false;
+        if(this.state !== State.PLAYING) return false;
         this.state = State.GAMEOVER;
 
 		// remove dust particles
@@ -3295,22 +3291,21 @@ class GameManager {
 
     pause() {
 
-        if(!this.state == State.PLAYING) return false;
+        if(this.state !== State.PLAYING) return false;
         
         this.state = State.PAUSED;
         audio.pause('bg');
     }
 
     resume() {
-        if(!this.state == State.PAUSED) return false;
+        if(this.state !== State.PAUSED) return false;
+        this.state = State.PLAYING;
         
-        this.state = State.PLAYING
         audio.resume('bg');
 
         clock.getDelta(); // drop delta
         this.render();
         this.loop();
-        this.state = State.PLAYING;
     }
 
     reset() {
@@ -3326,17 +3321,17 @@ class GameManager {
 
         // redraw to remove objects from scene
         this.render();
-        this.state = State.PLAYING;
     }
 
     restart() {
-        if(this.state == State.PLAYING) {
+        console.log("Restart");
+        if(this.state === State.PLAYING) {
             this.stop();
         }
         
         this.reset();
         this.start();
-        this.state = State.PLAYING;
+        //this.state = State.PLAYING;
     }
 
     render() {
@@ -3460,6 +3455,7 @@ class InterfaceManager {
     }
 
     btnRestartClick(e) {
+		console.log("Button to restart was clicked");
     	game.interface.buttons.restart.classList.add('hidden');
 
    		game.restart();

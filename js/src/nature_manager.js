@@ -634,6 +634,7 @@ class NatureManager {
   }
 
   reset() {
+    console.log("Removing Nature")
     // remove misc
     for(let l in this.config.levels) {
       for(let i = 0; i < this.misc[l].length; i++) {

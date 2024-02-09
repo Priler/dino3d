@@ -19,19 +19,15 @@ class BodyMovementsManager {
   init() {
     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       .then((stream) => {
-        console.log("Stream", stream)
         this.webcam = document.getElementById('webcam');
         this.webcam.srcObject = stream;
         //check when its loaded
         this.webcam.onloadedmetadata = () => {
           this.canvas = document.getElementById('canvas');
-          console.log(this.webcam.videoWidth)
-          console.log(this.webcam.videoHeight)
           const ratio = this.webcam.videoWidth / this.webcam.videoHeight;
           this.canvas.width = this.canvas.height * ratio;
         };
-        
-        
+
         console.log('WEBCAM INITIALIZED')
       })
       .catch((err) => {
@@ -52,6 +48,8 @@ class BodyMovementsManager {
   }
 
   getKeypoint(pose, keypointName) {
+    if(pose == undefined) return;
+    if(!pose.keypoints) return;
     if(pose && pose.keypoints){
       return pose.keypoints.find(keypoint => keypoint.name === keypointName);
     }
@@ -82,8 +80,6 @@ class BodyMovementsManager {
     const currentAnkleLeft = this.getKeypoint(currentPose, "left_ankle");
     const currentAnkleRight = this.getKeypoint(currentPose, "right_ankle");
     const variation = 5; 
-    //console.log("LEFT ANKLE", prevAnkleLeft.y, currentAnkleLeft.y);
-    //console.log("RIGHT ANKLE", prevAnkleRight.y, currentAnkleRight.y);
     return (prevAnkleLeft.y - currentAnkleLeft.y) > variation && (prevAnkleRight.y - currentAnkleRight.y) > variation;
   }
 
@@ -148,7 +144,7 @@ class BodyMovementsManager {
     if (this.detector) {
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
-        if(!pose.keypoints) return;
+        if(!pose || !pose.keypoints) return;
         
         //this.drawKeypoints(pose)
         //pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
