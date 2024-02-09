@@ -30,7 +30,7 @@ class InterfaceManager {
     	game.interface.buttons.start.display = 'none'; //hide
    		document.body.classList.add('game-started');
 
-   		game.start();
+   		game.startCalibration();
     }
 
     btnRestartClick(e) {

@@ -1,0 +1,7 @@
+{
+    // ...
+    "search.exclude": {
+        "**/js/build.**": true
+    }
+    // ...
+}

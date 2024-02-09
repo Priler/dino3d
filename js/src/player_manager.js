@@ -236,6 +236,20 @@
         }
     }
 
+    doStrafe(timeDelta) {
+
+        // Check if A is pressed
+        const strafeVelocity = 20;
+        const minPosition = -2.5;
+        const maxPosition = 2.5;
+
+        const positionToGo = minPosition + this.moveToPosition * (maxPosition - minPosition);
+        this.frame.position.x = positionToGo;
+        this.collisionBox.position.x = positionToGo;
+
+        
+    }
+
     reset() {
         this.currentFrame = 0;
         this.nextFrame();
@@ -245,7 +259,7 @@
         if( this.frames ) {
             this.anim_speed = 0.18 / (enemy.config.vel / 2);
             this.doJump(timeDelta);
-
+            this.doStrafe(timeDelta);
             // draw frames
             if( this.clock.getElapsedTime() > this.anim_speed ) {
                 this.clock.elapsedTime = 0;

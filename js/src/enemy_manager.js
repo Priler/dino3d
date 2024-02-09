@@ -74,7 +74,7 @@ class EnemyManager {
 				"cactus": [-60, 60]
 			},
 			"x_random_range": {
-				"cactus": [-.5, .5]
+				"cactus": [-.5, .5] //TODO: Receive from arguments, so it can be changed
 			},
 			"chance_to_spawn_tail": [100, 25], // tails spawn chances
 			"tail_rescale_rand": [[.6, .9], [.4, .7]], // tails rescale rand

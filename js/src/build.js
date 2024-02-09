@@ -27,6 +27,9 @@ let nature = new NatureManager();
 let load_manager = new LoadManager(); // start loading assets ASAP
 //= assets.js
 
+//= calibration_manager.js
+let calibration = new CalibrationManager();
+
 //= effects_manager.js
 let effects = new EffectsManager();
 

@@ -87,6 +87,9 @@
 
       addKey(81, 'debug_speedup'); // q
 
+      addKey(65, 'left');
+      addKey(68, 'right');
+
       // Keyboard events
       window.addEventListener('keydown', (e) => {
         // console.log(e.keyCode);

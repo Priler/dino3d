@@ -491,3 +491,10 @@ $scorecountercolor: darken(#85A0AC, 5%);
   background: blue;
   height: 150px;
 }
+
+#canvas{
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 101;
+}
