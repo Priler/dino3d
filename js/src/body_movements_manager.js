@@ -104,10 +104,9 @@ class BodyMovementsManager {
     const minY = Math.min(...keypoints.map(keypoint => keypoint.y));
     const maxY = Math.max(...keypoints.map(keypoint => keypoint.y));
     const variation = 30;
-
+    
     const armsCondition = (maxY - minY) < variation;
     return scoreCondition && armsCondition;
-  
   }
 
   clearCanvas() {
@@ -185,8 +184,12 @@ class BodyMovementsManager {
         this.drawKeypoints(pose, keypointsToRead);
         this.prevPose = pose;
       });
-    }
-    
+    } 
+  }
+
+  setBounds(left, right){
+    this.leftBoundary = left;
+    this.rightBoundary = right;
   }
 
   strafe(pose) {
@@ -198,14 +201,14 @@ class BodyMovementsManager {
     if(!leftAnkle || !rightAnkle) return;
 
     
-    const leftBoundary = (this.webcam.videoWidth / 4);
-    const rightBoundary = 3 * this.webcam.videoWidth / 4 ;
+    const leftBoundary = this.leftBoundary ? this.leftBoundary : this.webcam.videoWidth / 4;
+    const rightBoundary = this.rightBoundary ? this.rightBoundary : 3 * this.webcam.videoWidth / 4 ;
 
     const playableWidth = rightBoundary - leftBoundary;
 
     const middlePoint = (leftAnkle.x + rightAnkle.x) / 2;
 
-    const position =  (middlePoint - leftBoundary) / (playableWidth);
+    let position =  (middlePoint - leftBoundary) / (playableWidth);
 
 
     // left boundary = 250
@@ -216,8 +219,14 @@ class BodyMovementsManager {
     // if is left moveToPosition = 0
     // if middle  = 0.5
     // if is right moveToPosition = 1
+
+    if(position < 0){
+      position = 0;
+    } else if (position > 1){
+      position = 1;
+    }
+
     player.moveToPosition = position; // TODO:: improve
     
-
   }
 }

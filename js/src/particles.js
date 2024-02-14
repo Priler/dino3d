@@ -42,6 +42,7 @@ function nebulaCreateDynoDustEmitter(spd = 5) {
         ddZone.z = z;
     }
 
+    // x, y, z
     setP(0, -1.1, 15.5);
 
     dynoDustEmitter.emit();
@@ -56,3 +57,10 @@ let dynoDustEmitter = nebulaCreateDynoDustEmitter(4);
 
 nebulaSystem.addEmitter(dynoDustEmitter);
 nebulaSystem.addRenderer(new Nebula.MeshRenderer(scene, THREE));
+
+
+function updatePlayerDust(){
+    dynoDustEmitter.position.x = player.frame.position.x;
+    dynoDustEmitter.position.y = -1.1;
+    dynoDustEmitter.position.z = 15.5;
+}

@@ -74,13 +74,13 @@ class EnemyManager {
 				"cactus": [-60, 60]
 			},
 			"x_random_range": {
-				"cactus": [-.5, .5] //TODO: Receive from arguments, so it can be changed
+				"cactus": [-2.5, 2.5]
 			},
 			"chance_to_spawn_tail": [100, 25], // tails spawn chances
 			"tail_rescale_rand": [[.6, .9], [.4, .7]], // tails rescale rand
 
 			"ptero_anim_speed": 0.10, // lower is faster
-			"ptero_y_rand": [0, 1.3, 3.5], // random ptero y positions
+			"ptero_y_rand": [1.3], // random ptero y positions
 
 			"ptero_z_speedup": -35
 		}

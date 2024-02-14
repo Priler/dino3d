@@ -304,10 +304,9 @@ class BodyMovementsManager {
     const minY = Math.min(...keypoints.map(keypoint => keypoint.y));
     const maxY = Math.max(...keypoints.map(keypoint => keypoint.y));
     const variation = 30;
-
+    
     const armsCondition = (maxY - minY) < variation;
     return scoreCondition && armsCondition;
-  
   }
 
   clearCanvas() {
@@ -385,8 +384,12 @@ class BodyMovementsManager {
         this.drawKeypoints(pose, keypointsToRead);
         this.prevPose = pose;
       });
-    }
-    
+    } 
+  }
+
+  setBounds(left, right){
+    this.leftBoundary = left;
+    this.rightBoundary = right;
   }
 
   strafe(pose) {
@@ -398,14 +401,14 @@ class BodyMovementsManager {
     if(!leftAnkle || !rightAnkle) return;
 
     
-    const leftBoundary = (this.webcam.videoWidth / 4);
-    const rightBoundary = 3 * this.webcam.videoWidth / 4 ;
+    const leftBoundary = this.leftBoundary ? this.leftBoundary : this.webcam.videoWidth / 4;
+    const rightBoundary = this.rightBoundary ? this.rightBoundary : 3 * this.webcam.videoWidth / 4 ;
 
     const playableWidth = rightBoundary - leftBoundary;
 
     const middlePoint = (leftAnkle.x + rightAnkle.x) / 2;
 
-    const position =  (middlePoint - leftBoundary) / (playableWidth);
+    let position =  (middlePoint - leftBoundary) / (playableWidth);
 
 
     // left boundary = 250
@@ -416,9 +419,15 @@ class BodyMovementsManager {
     // if is left moveToPosition = 0
     // if middle  = 0.5
     // if is right moveToPosition = 1
+
+    if(position < 0){
+      position = 0;
+    } else if (position > 1){
+      position = 1;
+    }
+
     player.moveToPosition = position; // TODO:: improve
     
-
   }
 }
 /**
@@ -497,13 +506,13 @@ class EnemyManager {
 				"cactus": [-60, 60]
 			},
 			"x_random_range": {
-				"cactus": [-.5, .5] //TODO: Receive from arguments, so it can be changed
+				"cactus": [-2.5, 2.5]
 			},
 			"chance_to_spawn_tail": [100, 25], // tails spawn chances
 			"tail_rescale_rand": [[.6, .9], [.4, .7]], // tails rescale rand
 
 			"ptero_anim_speed": 0.10, // lower is faster
-			"ptero_y_rand": [0, 1.3, 3.5], // random ptero y positions
+			"ptero_y_rand": [1.3], // random ptero y positions
 
 			"ptero_z_speedup": -35
 		}
@@ -993,7 +1002,7 @@ class ScoreManager {
       audio.play('score');
       enemy.increase_velocity();
 
-      if(this.score >= 400 && this.lvl == 0) {
+      if(this.score >= 0 && this.lvl == 0) {
         // inc lvl
         this.lvl = 1;
         enemy.spawnPteros();
@@ -1278,6 +1287,7 @@ function nebulaCreateDynoDustEmitter(spd = 5) {
         ddZone.z = z;
     }
 
+    // x, y, z
     setP(0, -1.1, 15.5);
 
     dynoDustEmitter.emit();
@@ -1292,6 +1302,13 @@ let dynoDustEmitter = nebulaCreateDynoDustEmitter(4);
 
 nebulaSystem.addEmitter(dynoDustEmitter);
 nebulaSystem.addRenderer(new Nebula.MeshRenderer(scene, THREE));
+
+
+function updatePlayerDust(){
+    dynoDustEmitter.position.x = player.frame.position.x;
+    dynoDustEmitter.position.y = -1.1;
+    dynoDustEmitter.position.z = 15.5;
+}
 
 /**
  * Log class.
@@ -1576,7 +1593,7 @@ if(config.logs) {
         const minPosition = -2.5;
         const maxPosition = 2.5;
         //console.log(this.moveToPosition);
-        const positionToGo = maxPosition - this.moveToPosition * (maxPosition - minPosition);
+        const positionToGo = maxPosition - this.moveToPosition * (maxPosition - minPosition - 0.5);
         this.frame.position.x = positionToGo;
         this.collisionBox.position.x = positionToGo;
 
@@ -2840,12 +2857,27 @@ class CalibrationManager {
             if (isInCorrectPosition){
                 this.timeLeft -= timeDelta;
                 if (this.timeLeft <= 0){
-                    this.isCalibrated = true;
+                    this.finishCalibration();
+
                 }
             } else {
                 this.timeLeft = 0.5; // 2 seconds
             }
         }
+    }
+
+    finishCalibration(){
+        this.isCalibrated = true;
+        // Get left and right arm x positions
+        const leftWrist = webcam_input.getKeypoint('left_wrist');
+        const rightWrist = webcam_input.getKeypoint('right_wrist');
+
+        if(leftWrist && rightWrist){
+            this.leftArmX = leftWrist.position.x;
+            this.rightArmX = rightWrist.position.x;
+            webcam_input.setBounds(this.leftArmX, this.rightArmX);
+        }
+
     }
   }
 let calibration = new CalibrationManager();
@@ -2863,7 +2895,7 @@ class EffectsManager {
       this.daytime = {
         "is_day": true,
         "duration": {
-          "day": 60, // sec
+          "day": 50, // sec
           "night": 20, // sec
         },
         "transition": {
@@ -2879,9 +2911,9 @@ class EffectsManager {
             "shadow_radius": 1
           },
           "night": {
-            "ambient": 0,
-            "direct": .1,
-            "shadow_radius": 10
+            "ambient": 0.1,
+            "direct": .4,
+            "shadow_radius": 2
           }
         },
         "fog": {
@@ -3375,7 +3407,9 @@ class GameManager {
         nature.update(timeDelta);
         input.update();
         effects.update(timeDelta);
+        updatePlayerDust();
         nebulaSystem.update();
+        
 
         if(config.renderer.postprocessing.enable) {
             // postprocessing

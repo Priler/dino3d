@@ -296,7 +296,9 @@ class GameManager {
         nature.update(timeDelta);
         input.update();
         effects.update(timeDelta);
+        updatePlayerDust();
         nebulaSystem.update();
+        
 
         if(config.renderer.postprocessing.enable) {
             // postprocessing

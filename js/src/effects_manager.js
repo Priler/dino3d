@@ -11,7 +11,7 @@ class EffectsManager {
       this.daytime = {
         "is_day": true,
         "duration": {
-          "day": 60, // sec
+          "day": 50, // sec
           "night": 20, // sec
         },
         "transition": {
@@ -27,9 +27,9 @@ class EffectsManager {
             "shadow_radius": 1
           },
           "night": {
-            "ambient": 0,
-            "direct": .1,
-            "shadow_radius": 10
+            "ambient": 0.1,
+            "direct": .4,
+            "shadow_radius": 2
           }
         },
         "fog": {

@@ -83,7 +83,7 @@ class ScoreManager {
       audio.play('score');
       enemy.increase_velocity();
 
-      if(this.score >= 400 && this.lvl == 0) {
+      if(this.score >= 0 && this.lvl == 0) {
         // inc lvl
         this.lvl = 1;
         enemy.spawnPteros();

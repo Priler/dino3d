@@ -23,11 +23,26 @@ class CalibrationManager {
             if (isInCorrectPosition){
                 this.timeLeft -= timeDelta;
                 if (this.timeLeft <= 0){
-                    this.isCalibrated = true;
+                    this.finishCalibration();
+
                 }
             } else {
                 this.timeLeft = 0.5; // 2 seconds
             }
         }
+    }
+
+    finishCalibration(){
+        this.isCalibrated = true;
+        // Get left and right arm x positions
+        const leftWrist = webcam_input.getKeypoint('left_wrist');
+        const rightWrist = webcam_input.getKeypoint('right_wrist');
+
+        if(leftWrist && rightWrist){
+            this.leftArmX = leftWrist.position.x;
+            this.rightArmX = rightWrist.position.x;
+            webcam_input.setBounds(this.leftArmX, this.rightArmX);
+        }
+
     }
   }
