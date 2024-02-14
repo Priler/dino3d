@@ -45,4 +45,9 @@ class CalibrationManager {
         }
 
     }
+
+    reset(){
+        this.isCalibrated = false;
+        this.timeLeft = 0.5;
+    }
   }

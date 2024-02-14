@@ -208,6 +208,7 @@ class GameManager {
 
         // set starters
         this.setStarter(0);
+        calibration.reset();
     }
 
     pause() {
@@ -241,7 +242,7 @@ class GameManager {
         effects.reset();
 
         // redraw to remove objects from scene
-        this.render();
+        //this.render();
     }
 
     restart() {
@@ -252,6 +253,7 @@ class GameManager {
         
         this.reset();
         this.start();
+        game.interface.buttons.restart.classList.add('hidden');
         //this.state = State.PLAYING;
     }
 
@@ -265,9 +267,11 @@ class GameManager {
             case State.PLAYING:
                 this.playingUpdate(timeDelta);
                 break;
+            case State.GAMEOVER:
             case State.CALIBRATION:
                 this.gameCalibrationUpdate(timeDelta);
                 break;
+            
         }
         
 
@@ -277,7 +281,16 @@ class GameManager {
     gameCalibrationUpdate(timeDelta){
         calibration.update(timeDelta);
         if(calibration.isCalibrated){
-            this.start();
+            calibration.isCalibrated = false;
+            console.log("Calibrated");
+            switch(this.state){
+                case State.CALIBRATION:
+                    this.start();
+                    break;
+                case State.GAMEOVER:
+                    this.restart();
+                    return;
+            }
         }
         if(config.renderer.postprocessing.enable) {
             // postprocessing
@@ -332,7 +345,7 @@ class GameManager {
     loop() {
         if(!this.state == State.PLAYING && !this.state == State.CALIBRATION) {
             // stop the loop if necessary
-            return false;
+            //return false;
         }
 
         requestAnimationFrame(function() {

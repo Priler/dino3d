@@ -35,7 +35,6 @@ class InterfaceManager {
 
     btnRestartClick(e) {
 		console.log("Button to restart was clicked");
-    	game.interface.buttons.restart.classList.add('hidden');
 
    		game.restart();
     }
