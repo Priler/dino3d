@@ -178,7 +178,6 @@ class BodyMovementsManager {
 
   calibrationUpdate(keypointsToRead) {
     // print object istance id
-    console.log(this.)
     if(this.detector){
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
