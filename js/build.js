@@ -213,6 +213,7 @@ class BodyMovementsManager {
     this.state = Pose.NORMAL;
     this.prevPose = null;
     this.requiredKeypoints = ["left_ankle", "right_ankle", "left_hip", "right_hip", "left_knee", "right_knee", "left_shoulder", "right_shoulder"];
+    this.keypointsToDraw = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_ankle', 'right_ankle'];
     this.init();
   }
 
@@ -314,19 +315,14 @@ class BodyMovementsManager {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  drawKeypoints(pose, keypointsToDraw = null) {
-    
+  drawKeypoints(pose) {
     this.clearCanvas();
     
     const heightProportion = this.canvas.height / this.webcam.videoHeight;
     const widthProportion = this.canvas.width / this.webcam.videoWidth;
     const ctx = this.canvas.getContext('2d');
-    
-    if(!keypointsToDraw){
-      return;
-    }
 
-    keypointsToDraw.forEach(keypointName => {
+    this.keypointsToDraw.forEach(keypointName => {
       const kp = this.getKeypoint(pose, keypointName);
       if(!kp) return;
       ctx.beginPath();
@@ -334,9 +330,6 @@ class BodyMovementsManager {
       ctx.fillStyle = 'green';
       ctx.fill();
     });
-
-    
-    
   }
 
   update() {
@@ -344,6 +337,7 @@ class BodyMovementsManager {
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
         if(!pose || !pose.keypoints) return;
+        this.drawKeypoints(pose);
         
         //this.drawKeypoints(pose)
         //pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
@@ -376,13 +370,13 @@ class BodyMovementsManager {
     }
   }
 
-  calibrationUpdate(keypointsToRead) {
+  calibrationUpdate() {
     // print object istance id
     if(this.detector){
       this.detector.estimatePoses(this.webcam).then(poses => {
         const pose = poses[0];
         if(!pose || !pose.keypoints) return;
-        this.drawKeypoints(pose, keypointsToRead);
+        this.drawKeypoints(pose);
         this.prevPose = pose;
       });
     } 
@@ -2850,8 +2844,7 @@ class CalibrationManager {
     }
     
     update(timeDelta){
-        const keypointsToDraw = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_ankle', 'right_ankle'];
-        webcam_input.calibrationUpdate(keypointsToDraw);
+        webcam_input.calibrationUpdate();
         if (!this.isCalibrated){
             // Check if required number of samples have been collected
             const isInCorrectPosition = webcam_input.isCalibrated(['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow']);

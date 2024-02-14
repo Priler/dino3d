@@ -15,8 +15,7 @@ class CalibrationManager {
     }
     
     update(timeDelta){
-        const keypointsToDraw = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_ankle', 'right_ankle'];
-        webcam_input.calibrationUpdate(keypointsToDraw);
+        webcam_input.calibrationUpdate();
         if (!this.isCalibrated){
             // Check if required number of samples have been collected
             const isInCorrectPosition = webcam_input.isCalibrated(['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow']);
