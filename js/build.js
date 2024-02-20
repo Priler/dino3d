@@ -212,6 +212,9 @@ class BodyMovementsManager {
     this.canvas = null;
     this.state = Pose.NORMAL;
     this.prevPose = null;
+    this.leftBoundary = null;
+    this.rightBoundary = null;
+    this.jumpThreshold = null;
     this.requiredKeypoints = ["left_ankle", "right_ankle", "left_hip", "right_hip", "left_knee", "right_knee", "left_shoulder", "right_shoulder"];
     this.keypointsToDraw = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_ankle', 'right_ankle'];
     this.init();
@@ -248,7 +251,7 @@ class BodyMovementsManager {
     return keypoints_names.every(name => poseKeypointNames.includes(name));
   }
 
-  getKeypoint(pose, keypointName) {
+  getKeypointFromPose(pose, keypointName) {
     if(pose == undefined) return;
     if(!pose.keypoints) return;
     if(pose && pose.keypoints){
@@ -256,32 +259,38 @@ class BodyMovementsManager {
     }
   }
 
+
+  getKeypoint(keypointName) {
+    if(!this.prevPose) return;
+    return this.getKeypointFromPose(this.prevPose, keypointName)
+  }
+
+  averageYpoints(pose) {
+
+    const keypoints = ["nose", "left_eye", "right_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"];
+    
+    const sum = keypoints.reduce((acc, keypointName) => {
+      const keypoint = this.getKeypointFromPose(pose, keypointName);
+      if(!keypoint) return acc;
+      return acc + keypoint.y;
+    }, 0);
+
+    return sum / pose.keypoints.length;
+  }
+
   isCrouching(pose){
-    // Extract relevant joint positions
-    const hipLeft = this.getKeypoint(pose, "left_hip");
-    const hipRight = this.getKeypoint(pose, "right_hip");
-    const kneeLeft = this.getKeypoint(pose, "left_knee");
-    const kneeRight = this.getKeypoint(pose, "right_knee");
-    const ankleLeft = this.getKeypoint(pose, "left_ankle");
-    const ankleRight = this.getKeypoint(pose, "right_ankle");
-
-    // Set thresholds
-    const variation = 80;  // Example threshold
-    const left = ((kneeLeft.y - hipLeft.y) < variation) || (kneeLeft.y <= hipLeft.y && hipLeft.y <= ankleLeft.y)
-    const right = ((kneeRight.y - hipRight.y) < variation) || (kneeRight.y <= hipRight.y && hipRight.y <= ankleRight.y)
-
-    // Check if angles indicate crouching
-    return left && right;
+    const middle = this.averageYpoints(pose);
+    return middle > this.crouchingThreshold;
   }
 
   isJumping(currentPose) {
     if(!this.prevPose) return false;
-    const prevAnkleLeft = this.getKeypoint(this.prevPose, "left_ankle");
-    const prevAnkleRight = this.getKeypoint(this.prevPose, "right_ankle");
-    const currentAnkleLeft = this.getKeypoint(currentPose, "left_ankle");
-    const currentAnkleRight = this.getKeypoint(currentPose, "right_ankle");
-    const variation = 5; 
-    return (prevAnkleLeft.y - currentAnkleLeft.y) > variation && (prevAnkleRight.y - currentAnkleRight.y) > variation;
+    const prevAnkleLeft = this.getKeypointFromPose(this.prevPose, "left_ankle");
+    const prevAnkleRight = this.getKeypointFromPose(this.prevPose, "right_ankle");
+    const currentAnkleLeft = this.getKeypointFromPose(currentPose, "left_ankle");
+    const currentAnkleRight = this.getKeypointFromPose(currentPose, "right_ankle");
+    // const variation = 5; 
+    return (prevAnkleLeft.y - currentAnkleLeft.y) > this.jumpThreshold && (prevAnkleRight.y - currentAnkleRight.y) > this.jumpThreshold;
   }
 
   isCalibrated(keypointNames) {
@@ -290,8 +299,8 @@ class BodyMovementsManager {
 
     const threshold = 0.3;
     // Verify if all keypoints have better score than threshold
-    const scoreCondition =  keypointNames.every(keypointName => {
-      const keypoint = this.getKeypoint(pose, keypointName);
+    const scoreCondition = keypointNames.every(keypointName => {
+      const keypoint = this.getKeypointFromPose(pose, keypointName);
       return keypoint.score > threshold;
     });
     if(!scoreCondition){
@@ -301,7 +310,7 @@ class BodyMovementsManager {
     // Verifiy if arms are straight;
     // get min and max y of all keypoints~
     const armKeypoints = ["left_shoulder", "right_shoulder", "left_wrist", "right_wrist", "left_elbow", "right_elbow"];
-    const keypoints = armKeypoints.map(keypointName => this.getKeypoint(pose, keypointName));
+    const keypoints = armKeypoints.map(keypointName => this.getKeypointFromPose(pose, keypointName));
     const minY = Math.min(...keypoints.map(keypoint => keypoint.y));
     const maxY = Math.max(...keypoints.map(keypoint => keypoint.y));
     const variation = 30;
@@ -315,6 +324,17 @@ class BodyMovementsManager {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  drawGraySides() {
+    const widthProportion = this.canvas.width / this.webcam.videoWidth;
+    const ctx = this.canvas.getContext('2d');
+
+    ctx.beginPath();
+    ctx.rect(0, 0, this.rightBoundary * widthProportion, this.canvas.height);
+    ctx.rect(this.leftBoundary * widthProportion, 0, this.canvas.width - this.leftBoundary * widthProportion, this.canvas.height);
+    ctx.fillStyle = 'rgba(128, 128, 128, 0.8)';
+    ctx.fill();
+  }
+
   drawKeypoints(pose) {
     this.clearCanvas();
     
@@ -323,7 +343,7 @@ class BodyMovementsManager {
     const ctx = this.canvas.getContext('2d');
 
     this.keypointsToDraw.forEach(keypointName => {
-      const kp = this.getKeypoint(pose, keypointName);
+      const kp = this.getKeypointFromPose(pose, keypointName);
       if(!kp) return;
       ctx.beginPath();
       ctx.arc(kp.x * widthProportion, kp.y * heightProportion, 5, 0, 2 * Math.PI);
@@ -338,6 +358,7 @@ class BodyMovementsManager {
         const pose = poses[0];
         if(!pose || !pose.keypoints) return;
         this.drawKeypoints(pose);
+        this.drawGraySides();
         
         //this.drawKeypoints(pose)
         //pose.keypoints = pose.keypoints.filter(keypoint => keypoint.score >= 0.30);
@@ -379,31 +400,39 @@ class BodyMovementsManager {
         this.drawKeypoints(pose);
         this.prevPose = pose;
       });
-    } 
+    }
   }
 
   setBounds(left, right){
+    console.log("Bounds set", left, right)
     this.leftBoundary = left;
     this.rightBoundary = right;
   }
 
+  setJumpThreshold(threshold){
+    this.jumpThreshold = threshold;
+  }
+  setCrouchThreshold(threshold) {
+    this.crouchingThreshold = threshold;
+  }
+
   strafe(pose) {
     // get middle point between feet
-    const leftAnkle = this.getKeypoint(pose, "left_ankle");
-    const rightAnkle = this.getKeypoint(pose, "right_ankle");
+    const leftAnkle = this.getKeypointFromPose(pose, "left_ankle");
+    const rightAnkle = this.getKeypointFromPose(pose, "right_ankle");
     
 
     if(!leftAnkle || !rightAnkle) return;
 
-    
+  
     const leftBoundary = this.leftBoundary ? this.leftBoundary : this.webcam.videoWidth / 4;
     const rightBoundary = this.rightBoundary ? this.rightBoundary : 3 * this.webcam.videoWidth / 4 ;
 
-    const playableWidth = rightBoundary - leftBoundary;
+    const playableWidth = leftBoundary - rightBoundary;
 
     const middlePoint = (leftAnkle.x + rightAnkle.x) / 2;
 
-    let position =  (middlePoint - leftBoundary) / (playableWidth);
+    let position =  (middlePoint - rightBoundary) / (playableWidth);
 
 
     // left boundary = 250
@@ -2852,7 +2881,6 @@ class CalibrationManager {
                 this.timeLeft -= timeDelta;
                 if (this.timeLeft <= 0){
                     this.finishCalibration();
-
                 }
             } else {
                 this.timeLeft = 0.5; // 2 seconds
@@ -2862,14 +2890,33 @@ class CalibrationManager {
 
     finishCalibration(){
         this.isCalibrated = true;
+        
         // Get left and right arm x positions
         const leftWrist = webcam_input.getKeypoint('left_wrist');
         const rightWrist = webcam_input.getKeypoint('right_wrist');
 
+        const leftHip = webcam_input.getKeypoint('left_hip');
+        const rightHip = webcam_input.getKeypoint('right_hip');
+        const leftKnee = webcam_input.getKeypoint('left_knee');
+        const rightKnee = webcam_input.getKeypoint('right_knee');
+        const leftAnkle = webcam_input.getKeypoint('left_ankle');
+        const rightAnkle = webcam_input.getKeypoint('right_ankle');
+
+        const nose = webcam_input.getKeypoint('nose');
+        const middleAnkle = (leftAnkle.y + rightAnkle.y) / 2;
+        const personHeight = middleAnkle - nose.y;
+        
+
+        const avg = Math.abs((leftKnee.y - leftAnkle.y + rightKnee.y - rightAnkle.y) / 2)
+        const femurLength = Math.abs((leftHip.y - leftKnee.y) + (rightHip.y - rightKnee.y) / 2)
+        
+        console.log("Calibration finished", leftWrist, rightWrist);
+
         if(leftWrist && rightWrist){
-            this.leftArmX = leftWrist.position.x;
-            this.rightArmX = rightWrist.position.x;
-            webcam_input.setBounds(this.leftArmX, this.rightArmX);
+            webcam_input.setBounds(leftWrist.x, rightWrist.x);
+            webcam_input.setJumpThreshold(avg / 15);
+            const middle = webcam_input.averageYpoints(webcam_input.prevPose)
+            webcam_input.setCrouchThreshold(middle * 1.15)
         }
 
     }

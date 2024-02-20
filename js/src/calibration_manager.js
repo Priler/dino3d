@@ -23,7 +23,6 @@ class CalibrationManager {
                 this.timeLeft -= timeDelta;
                 if (this.timeLeft <= 0){
                     this.finishCalibration();
-
                 }
             } else {
                 this.timeLeft = 0.5; // 2 seconds
@@ -33,14 +32,33 @@ class CalibrationManager {
 
     finishCalibration(){
         this.isCalibrated = true;
+        
         // Get left and right arm x positions
         const leftWrist = webcam_input.getKeypoint('left_wrist');
         const rightWrist = webcam_input.getKeypoint('right_wrist');
 
+        const leftHip = webcam_input.getKeypoint('left_hip');
+        const rightHip = webcam_input.getKeypoint('right_hip');
+        const leftKnee = webcam_input.getKeypoint('left_knee');
+        const rightKnee = webcam_input.getKeypoint('right_knee');
+        const leftAnkle = webcam_input.getKeypoint('left_ankle');
+        const rightAnkle = webcam_input.getKeypoint('right_ankle');
+
+        const nose = webcam_input.getKeypoint('nose');
+        const middleAnkle = (leftAnkle.y + rightAnkle.y) / 2;
+        const personHeight = middleAnkle - nose.y;
+        
+
+        const avg = Math.abs((leftKnee.y - leftAnkle.y + rightKnee.y - rightAnkle.y) / 2)
+        const femurLength = Math.abs((leftHip.y - leftKnee.y) + (rightHip.y - rightKnee.y) / 2)
+        
+        console.log("Calibration finished", leftWrist, rightWrist);
+
         if(leftWrist && rightWrist){
-            this.leftArmX = leftWrist.position.x;
-            this.rightArmX = rightWrist.position.x;
-            webcam_input.setBounds(this.leftArmX, this.rightArmX);
+            webcam_input.setBounds(leftWrist.x, rightWrist.x);
+            webcam_input.setJumpThreshold(avg / 15);
+            const middle = webcam_input.averageYpoints(webcam_input.prevPose)
+            webcam_input.setCrouchThreshold(middle * 1.15)
         }
 
     }
