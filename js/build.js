@@ -1,19 +1,5 @@
 "use strict";
 
-  // Keeps the state of keys/buttons
-  //
-  // You can check
-  //
-  //   inputManager.keys.left.down
-  //
-  // to see if the left key is currently held down
-  // and you can check
-  //
-  //   inputManager.keys.left.justPressed
-  //
-  // To see if the left key was pressed this frame
-  //
-
   class InputManager {
     constructor() {
       this.keys = {};
