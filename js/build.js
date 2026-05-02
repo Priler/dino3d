@@ -2271,7 +2271,7 @@ class TranslationManager {
 
       console.log(`Translator availability for en->${targetLanguage}: ${availability}`);
 
-      if (availability === 'no') {
+      if (availability === 'unavailable') {
         if (statusElement) {
           statusElement.textContent = `Translation to ${this.getLanguageName(targetLanguage)} is not supported`;
           setTimeout(() => {
@@ -2289,7 +2289,7 @@ class TranslationManager {
         return;
       }
 
-      if (availability !== 'readily-available') {
+      if (availability !== 'available') {
         if (statusElement) {
           statusElement.textContent = `Downloading language model (${targetLanguage})...`;
         }
@@ -2497,12 +2497,13 @@ class GameManager {
     if ('LanguageModel' in self) {
       try {
         console.log('Attempting to initialize Chrome Prompt API...');
-        const { available, defaultTemperature, defaultTopK, maxTopK } = await LanguageModel.params();
+        const availability = await LanguageModel.availability();
 
-        if (available !== "no") {
+        if (availability !== 'unavailable') {
+          const params = await LanguageModel.params();
           this.languageModel = await LanguageModel.create({
             temperature: 0.2,
-            topK: defaultTopK,
+            topK: params?.defaultTopK,
           });
 
           console.log('Chrome Prompt API initialized successfully');

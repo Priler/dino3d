@@ -30,9 +30,11 @@ export default async function handler(request) {
   const fullPrompt = `${systemPrompt}\n\n${prompt}`;
 
   const stream = await genAI.models.generateContentStream({
-    model: 'gemini-2.0-flash',
-    temperature: 0.2,
+    model: 'gemini-2.5-flash',
     contents: fullPrompt,
+    config: {
+      temperature: 0.2,
+    },
   });
 
   const encoder = new TextEncoder();
