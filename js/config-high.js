@@ -3,7 +3,7 @@
  * @type {Object}
  */
 const config = {
-	"base_path": "/dino3d/",
+	"base_path": location.pathname.replace(/[^\/]*\.html$/, ''),
 	"logs": true,
 	"debug": false,
 	"camera": {

@@ -1,6 +1,6 @@
 # 🦖 T-Rex Run 3D
-Play the game here: http://priler.github.io/dino3d/low.html  
-Alt. version with best quality settings for high-end PCs: http://priler.github.io/dino3d/
+Play the game here: https://misheus.github.io/dino3d/low.html  
+Alt. version with best quality settings for high-end PCs: https://misheus.github.io/dino3d/
 
 # Description
 T-Rex Run 3D is a ThreeJS WebGL game made as an experiment.  
@@ -41,6 +41,12 @@ https://trello.com/b/Pt4FSqOi/t-rex-run-3d
   - High jumps bug fixed
   - Scores display fixed
   - Moving objects stuttering fixed (never use .splice() again :3)
+
+## Development
+- Use some webserver to serve this. It wouldn't work if you just open index.html from your filesystem.
+- First time run `npm install` to install dependencies.
+- Now you can run `npx gulp reload-js` to build js once, `npx gulp reload-css` to build scss once, or `npx gulp` to do those things automatically when you save a file.
+
 
 ## Credits
 https://threejs.org/ - WebGL 3D Library  

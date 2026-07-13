@@ -78,14 +78,17 @@
       // addKey(39, 'right');
       // addKey(38, 'up');
       addKey(40, 'down'); // down
-      // addKey(83, 'down'); // s
+      addKey(83, 'down'); // s
       addKey(17, 'down'); // Ctrl
 
-      // addKey(87, 'space'); // w
+      addKey(87, 'space'); // w
       addKey(38, 'space'); // up
       addKey(32, 'space'); // space
 
       addKey(81, 'debug_speedup'); // q
+
+
+      //keyboard
 
       window.addEventListener('keydown', (e) => {
         // console.log(e.keyCode);
@@ -95,6 +98,37 @@
       window.addEventListener('keyup', (e) => {
         setKeyFromKeyCode(e.keyCode, false);
       });
+      
+      
+      //mouse
+
+      window.addEventListener('mousedown', (e) => {
+        // console.log(e.keyCode);
+        if (e.pageY < document.documentElement.clientHeight/2) setKey('space', true);
+        else setKey('down', true);
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        setKey('space', false);
+        setKey('down', false);
+      });
+
+      //touchscreen
+
+      window.addEventListener('touchstart', (e) => {
+        // console.log(e.keyCode);
+        if (e.touches[0].pageY < document.documentElement.clientHeight/2) setKey('space', true);
+        else setKey('down', true);
+      });
+
+      window.addEventListener('touchend', (e) => {
+        setKey('space', false);
+        setKey('down', false);
+      });
+      
+      
+      
+      
     }
 
     update() {
